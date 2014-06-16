@@ -18,7 +18,7 @@ require_once('cleantalk.class.php' );
  * Access key for cleantalk.org
  * @see https://clenatalk.org/register
  */
-$wgCTAccessKey = 'liemouse';
+$wgCTAccessKey = '';
 
 /**
  * Cloud URL 
