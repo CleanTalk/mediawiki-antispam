@@ -21,6 +21,13 @@ require_once('cleantalk.class.php' );
 $wgCTAccessKey = '';
 
 /**
+ * Check registrations, when there is errors with connection to service
+ * true - option enabled
+ * false - option disabled
+ */
+$wgCTCheckNoConnect = true;
+
+/**
  * Cloud URL 
  */
 $wgCTServerURL = 'http://moderate.cleantalk.org/api2.0';
@@ -28,7 +35,7 @@ $wgCTServerURL = 'http://moderate.cleantalk.org/api2.0';
 /**
  * Extension agent name and version 
  */
-$wgCTAgent = 'mediawiki-11';
+$wgCTAgent = 'mediawiki-12';
 
 /**
  * Extension name 
