@@ -115,8 +115,16 @@ class CTHooks {
         $ctResult = $ct->isAllowUser($ctRequest);
 
         // Allow account if we have any API errors
-        if ( $ctResult->errno != 0 ) {
-            return $allowAccount;
+        if ( $ctResult->errno != 0 ) 
+        {
+        	if(CTBody::JSTest()==0&&$wgCTCheckNoConnect)
+        	{
+        		$allowAccount = false;
+        	}
+        	else
+        	{
+        		return $allowAccount;
+        	}
         }
 
         // Disallow account with CleanTalk comment 
