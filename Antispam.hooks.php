@@ -64,12 +64,26 @@ class CTHooks {
         $ctResult = $ct->isAllowMessage($ctRequest);
 
         // Allow edit if we have any API errors
-        if ( $ctResult->errno != 0 ) {
+        /*if ( $ctResult->errno != 0 ) {
             return $allowEdit;
+        }*/
+        if ( $ctResult->errno != 0 ) 
+        {
+        	if(CTBody::JSTest()!=1)
+        	{
+        		$ctResult->allow=0;
+        		$ctResult->comment = "Forbidden. Please, enable Javascript.";
+        		$allowEdit = false;
+        	}
+        	else
+        	{
+        		$ctResult->allow=1;
+        		$allowEdit = true;
+        	}
         }
 
         // Disallow edit with CleanTalk comment 
-        if ($ctResult->allow == 0 && ($ctResult->spam || $ctResult->stop_queue)) {
+        if (!$allowEdit || $ctResult->allow == 0 && ($ctResult->spam || $ctResult->stop_queue)) {
             $error = $ctResult->comment;
             
             // Converting links to wikitext format
@@ -117,13 +131,14 @@ class CTHooks {
         // Allow account if we have any API errors
         if ( $ctResult->errno != 0 ) 
         {
-        	if(CTBody::JSTest()==0&&$wgCTCheckNoConnect)
+        	if(CTBody::JSTest()!=1)
         	{
-        		$allowAccount = false;
+        		$ctResult->allow=0;
+        		$ctResult->comment = "Forbidden. Please, enable Javascript.";
         	}
         	else
         	{
-        		return $allowAccount;
+        		$ctResult->allow=1;
         	}
         }
 

@@ -35,7 +35,7 @@ $wgCTServerURL = 'http://moderate.cleantalk.org/api2.0';
 /**
  * Extension agent name and version 
  */
-$wgCTAgent = 'mediawiki-12';
+$wgCTAgent = 'mediawiki-13';
 
 /**
  * Extension name 

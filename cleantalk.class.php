@@ -2,7 +2,7 @@
 /**
  * Cleantalk base class
  *
- * @version 2.0.0
+ * @version 2.1.1
  * @package Cleantalk
  * @subpackage Base
  * @author Cleantalk team (welcome@cleantalk.org)
@@ -295,6 +295,9 @@ class CleantalkRequest {
      * @var int
      */
     public $submit_time = null;
+    
+    public $x_forwarded_for = '';
+    public $x_real_ip = '';
 
     /**
      * Is enable Java Script,
@@ -373,7 +376,7 @@ class Cleantalk {
 	* Server connection timeout in seconds 
 	* @var int
 	*/
-	private $server_timeout = 3;
+	private $server_timeout = 6;
 
     /**
      * Cleantalk server url
@@ -428,6 +431,12 @@ class Cleantalk {
      * @var bool 
      */
     public $ssl_on = false;
+    
+    /**
+     * Path to SSL certificate 
+     * @var string
+     */
+    public $ssl_path = '';
 
     /**
      * Minimal server response in miliseconds to catch the server
@@ -594,7 +603,7 @@ class Cleantalk {
      */
     private function sendRequest($data = null, $url, $server_timeout = 3) {
         // Convert to array
-        $data = json_decode(json_encode($data), true);
+        $data = (array)json_decode(json_encode($data), true);
 
         // Convert to JSON
         $data = json_encode($data);
@@ -625,9 +634,14 @@ class Cleantalk {
             
             // Disabling CA cert verivication
             // Disabling common name verification
-            if ($this->ssl_on) {
+            if ($this->ssl_on && $this->ssl_path=='') {
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            }
+            else if ($this->ssl_on && $this->ssl_path!='') {
+            	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
+                curl_setopt($ch, CURLOPT_CAINFO, $this->ssl_path);
             }
 
             $result = curl_exec($ch);
@@ -654,8 +668,8 @@ class Cleantalk {
                 $result = @file_get_contents($url, false, $context);
             }
         }
-
-        if (!$result) {
+        
+        if (!$result || !cleantalk_is_JSON($result)) {
             $response = null;
             $response['errno'] = 1;
             if ($curl_error) {
@@ -697,8 +711,23 @@ class Cleantalk {
         $msg->all_headers=json_encode(apache_request_headers());
         //$msg->remote_addr=$_SERVER['REMOTE_ADDR'];
         //$msg->sender_info['remote_addr']=$_SERVER['REMOTE_ADDR'];
-        $si=json_decode($msg->sender_info,true);
-        $si['remote_addr']=$_SERVER['REMOTE_ADDR'];
+        $si=(array)json_decode($msg->sender_info,true);
+        if(defined('IN_PHPBB'))
+        {
+        	global $request;
+        	if(method_exists($request,'server'))
+        	{
+        		$si['remote_addr']=$request->server('REMOTE_ADDR');
+        		$msg->x_forwarded_for=$request->server('X_FORWARDED_FOR');
+        		$msg->x_real_ip=$request->server('X_REAL_IP');
+        	}
+        }
+        else
+        {
+        	$si['remote_addr']=$_SERVER['REMOTE_ADDR'];
+        	$msg->x_forwarded_for=@$_SERVER['X_FORWARDED_FOR'];
+        	$msg->x_real_ip=@$_SERVER['X_REAL_IP'];
+        }
         $msg->sender_info=json_encode($si);
         if (((isset($this->work_url) && $this->work_url !== '') && ($this->server_changed + $this->server_ttl > time()))
 				|| $this->stay_on_server == true) {
@@ -889,7 +918,7 @@ class Cleantalk {
         if (!$data_ip || !preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $data_ip)) {
             return $data_ip;
         }
-        if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        /*if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
             
             $forwarded_ip = explode(",", $_SERVER['HTTP_X_FORWARDED_FOR']);
 
@@ -923,7 +952,8 @@ class Cleantalk {
             }
         }
 
-        return $data_ip;
+        return $data_ip;*/
+        return cleantalk_get_real_ip();
     }
 
     /**
@@ -993,6 +1023,21 @@ class Cleantalk {
         }
         
         return $str;
+    }
+    
+    /**
+     * Function gets information about spam active networks 
+     *
+     * @param string api_key
+     * @return JSON/array 
+     */
+    public function get_2s_blacklists_db ($api_key) {
+        $request=Array();
+        $request['method_name'] = '2s_blacklists_db'; 
+        $request['auth_key'] = $api_key;
+        $url='https://api.cleantalk.org';
+        $result=sendRawRequest($url,$request);
+        return $result;
     }
 }
 
@@ -1116,4 +1161,36 @@ if( !function_exists('apache_request_headers') )
 		}
 		return( $arh );
 	}
+}
+
+function cleantalk_get_real_ip()
+{
+	if ( function_exists( 'apache_request_headers' ) )
+	{
+		$headers = apache_request_headers();
+	}
+	else
+	{
+		$headers = $_SERVER;
+	}
+	if ( array_key_exists( 'X-Forwarded-For', $headers ) )
+	{
+		$the_ip=explode(",", trim($headers['X-Forwarded-For']));
+		$the_ip = trim($the_ip[0]);
+	}
+	elseif ( array_key_exists( 'HTTP_X_FORWARDED_FOR', $headers ))
+	{
+		$the_ip=explode(",", trim($headers['HTTP_X_FORWARDED_FOR']));
+		$the_ip = trim($the_ip[0]);
+	}
+	else
+	{
+		$the_ip = filter_var( $_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
+	}
+	return $the_ip;
+}
+
+function cleantalk_is_JSON($string)
+{
+    return ((is_string($string) && (is_object(json_decode($string)) || is_array(json_decode($string))))) ? true : false;
 }
