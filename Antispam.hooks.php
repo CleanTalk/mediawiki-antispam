@@ -154,4 +154,15 @@ class CTHooks {
 
         return $allowAccount;
 	}
+	
+	/*public static function onOutputPageBeforeHTML( OutputPage &$out, &$text )
+	{
+		$text.="!!!";
+		return $out;
+	}*/
+	
+	public static function onParserAfterTidy(&$parser, &$text)
+	{
+		$text.="<li id='footer-info-viewcount'><a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.</li>";
+	}
 }

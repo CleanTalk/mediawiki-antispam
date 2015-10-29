@@ -35,7 +35,7 @@ $wgCTServerURL = 'http://moderate.cleantalk.org/api2.0';
 /**
  * Extension agent name and version 
  */
-$wgCTAgent = 'mediawiki-13';
+$wgCTAgent = 'mediawiki-14';
 
 /**
  * Extension name 
@@ -68,6 +68,12 @@ $wgCTAdminAccountId = 1;
 $wgCTAdminNotificaionInteval = 10800;
 
 /**
+ * Show link to CleanTalk
+ * Enabling this option places a small link under the comment form that lets others know what anti-spam tool protects your site.
+ */
+$wgCTShowLink = true;
+
+/**
  * Extension settings store file 
  */
 $wgCTDataStoreFile = __DIR__ . '/Antispam.store.dat';
@@ -92,3 +98,8 @@ $wgHooks['EditPage::showEditForm:initial'][] = 'CTHooks::onShowEditForm';
 
 // Skip edit test for Administrators
 $wgGroupPermissions['sysop']['cleantalk-bypass'] = true;
+
+if($wgCTShowLink)
+{
+	$wgHooks['ParserAfterTidy'][] = 'CTHooks::onParserAfterTidy';
+}
