@@ -56,6 +56,7 @@ class CTHooks {
         $ctRequest->sender_ip = $wgRequest->getIP(); 
         $ctRequest->js_on = CTBody::JSTest(); 
         $ctRequest->submit_time = CTBody::SubmitTimeTest(); 
+        $ctRequest->sender_info=Array('page_url'=>htmlspecialchars(@$_SERVER['SERVER_NAME'].@$_SERVER['REQUEST_URI']));
 
         $ct = new Cleantalk();
         $ct->server_url = $wgCTServerURL;
@@ -121,6 +122,7 @@ class CTHooks {
         $ctRequest->sender_ip = $wgRequest->getIP(); 
         $ctRequest->js_on = CTBody::JSTest(); 
         $ctRequest->submit_time = CTBody::SubmitTimeTest(); 
+        $ctRequest->sender_info=Array('page_url'=>htmlspecialchars(@$_SERVER['SERVER_NAME'].@$_SERVER['REQUEST_URI']));
 
         $ct = new Cleantalk();
         $ct->server_url = $wgCTServerURL;
@@ -155,14 +157,9 @@ class CTHooks {
         return $allowAccount;
 	}
 	
-	/*public static function onOutputPageBeforeHTML( OutputPage &$out, &$text )
+	public static function onOutputPageBeforeHTML( OutputPage &$out, &$text )
 	{
-		$text.="!!!";
+		$text.="<a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.";
 		return $out;
-	}*/
-	
-	public static function onParserAfterTidy(&$parser, &$text)
-	{
-		$text.="<li id='footer-info-viewcount'><a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.</li>";
 	}
 }
