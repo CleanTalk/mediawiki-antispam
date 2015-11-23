@@ -35,7 +35,7 @@ $wgCTServerURL = 'http://moderate.cleantalk.org/api2.0';
 /**
  * Extension agent name and version 
  */
-$wgCTAgent = 'mediawiki-14';
+$wgCTAgent = 'mediawiki-141';
 
 /**
  * Extension name 
@@ -84,7 +84,7 @@ $wgExtensionCredits['antispam'][] = array(
 	'author' => 'Denis Shagimuratov',
 	'url' => 'https://www.mediawiki.org/wiki/Extension:Antispam',
 	'descriptionmsg' => 'cleantalk-desc',
-	'version' => '1.4',
+	'version' => '1.4.1',
 );
 
 $wgAutoloadClasses['CTBody'] = __DIR__ . '/Antispam.body.php';
@@ -101,5 +101,5 @@ $wgGroupPermissions['sysop']['cleantalk-bypass'] = true;
 
 if($wgCTShowLink)
 {
-	$wgHooks['ParserAfterTidy'][] = 'CTHooks::onParserAfterTidy';
+	$wgHooks['OutputPageBeforeHTML'][] = 'CTHooks::onOutputPageBeforeHTML';
 }
