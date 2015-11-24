@@ -56,7 +56,7 @@ class CTHooks {
         $ctRequest->sender_ip = $wgRequest->getIP(); 
         $ctRequest->js_on = CTBody::JSTest(); 
         $ctRequest->submit_time = CTBody::SubmitTimeTest(); 
-        $ctRequest->sender_info=Array('page_url'=>htmlspecialchars(@$_SERVER['SERVER_NAME'].@$_SERVER['REQUEST_URI']));
+        $ctRequest->sender_info=json_encode(Array('page_url'=>htmlspecialchars(@$_SERVER['SERVER_NAME'].@$_SERVER['REQUEST_URI'])));
 
         $ct = new Cleantalk();
         $ct->server_url = $wgCTServerURL;
@@ -122,7 +122,7 @@ class CTHooks {
         $ctRequest->sender_ip = $wgRequest->getIP(); 
         $ctRequest->js_on = CTBody::JSTest(); 
         $ctRequest->submit_time = CTBody::SubmitTimeTest(); 
-        $ctRequest->sender_info=Array('page_url'=>htmlspecialchars(@$_SERVER['SERVER_NAME'].@$_SERVER['REQUEST_URI']));
+        $ctRequest->sender_info=json_encode(Array('page_url'=>htmlspecialchars(@$_SERVER['SERVER_NAME'].@$_SERVER['REQUEST_URI'])));
 
         $ct = new Cleantalk();
         $ct->server_url = $wgCTServerURL;
