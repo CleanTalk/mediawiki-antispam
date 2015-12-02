@@ -18,7 +18,7 @@ require_once('cleantalk.class.php' );
  * Access key for cleantalk.org
  * @see https://clenatalk.org/register
  */
-$wgCTAccessKey = '';
+$wgCTAccessKey = 'liemouse';
 
 /**
  * Check registrations, when there is errors with connection to service
@@ -101,5 +101,5 @@ $wgGroupPermissions['sysop']['cleantalk-bypass'] = true;
 
 if($wgCTShowLink)
 {
-	$wgHooks['OutputPageBeforeHTML'][] = 'CTHooks::onOutputPageBeforeHTML';
+	$wgHooks["SkinAfterBottomScripts"][] = "CTHooks::onSkinAfterBottomScripts";
 }
