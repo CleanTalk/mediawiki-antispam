@@ -24,7 +24,7 @@ class CTHooks {
     public static function onUserCreateForm( &$template ) {
         global $wgCTSubmitTimeLabel;
         
-        $template->set( 'header', CTBody::AddJSCode() );
+        $template->set( 'header', CTBody::AddJSCode());
 
         $_SESSION[$wgCTSubmitTimeLabel] = time();
         
@@ -157,9 +157,9 @@ class CTHooks {
         return $allowAccount;
 	}
 	
-	public static function onOutputPageBeforeHTML( OutputPage &$out, &$text )
+	public static function onSkinAfterBottomScripts( $skin, &$text )
 	{
-		$text.="<a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.";
-		return $out;
+		$text.="<div style='width:100%;text-align:center;'><a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.</div>";
+		return true;
 	}
 }
