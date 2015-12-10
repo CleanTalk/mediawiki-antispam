@@ -71,7 +71,7 @@ $wgCTAdminNotificaionInteval = 10800;
  * Show link to CleanTalk
  * Enabling this option places a small link under the comment form that lets others know what anti-spam tool protects your site.
  */
-$wgCTShowLink = true;
+$wgCTShowLink = false;
 
 /**
  * Extension settings store file 
