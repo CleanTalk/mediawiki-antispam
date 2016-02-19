@@ -159,7 +159,131 @@ class CTHooks {
 	
 	public static function onSkinAfterBottomScripts( $skin, &$text )
 	{
-		$text.="<div style='width:100%;text-align:center;'><a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.</div>";
+		global $wgCTShowLink, $wgCTSFW, $wgCTDataStoreFile, $wgCTAccessKey;
+		
+		/* SFW starts */
+		
+		if($wgCTSFW && file_exists($wgCTDataStoreFile))
+		{
+			$settings = file_get_contents($wgCTDataStoreFile);
+			
+			include_once("cleantalk-sfw.class.php");
+			
+			if ($settings)
+			{
+				$settings = json_decode($settings, true);
+				if(!isset($settings['lastSFWUpdate']))
+				{
+					$settings['lastSFWUpdate'] = 0;
+				}
+				if(time()-$settings['lastSFWUpdate'] > 30)
+				{
+					$dbr = wfGetDB(DB_MASTER);
+					$dbr->query("DROP TABLE IF EXISTS `cleantalk_sfw`;");
+					$dbr->commit();
+					$dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
+		`network` int(11) unsigned NOT NULL,
+		`mask` int(11) unsigned NOT NULL,
+		INDEX (  `network` ,  `mask` )
+		) ENGINE = MYISAM ;");
+					$dbr->commit();
+					$data = Array(	'auth_key' => $wgCTAccessKey,
+						'method_name' => '2s_blacklists_db'
+		 			);
+		 			$result=sendRawRequest('https://api.cleantalk.org/2.1',$data,false);
+					$result=json_decode($result, true);
+					if(isset($result['data']))
+					{
+						$result=$result['data'];
+						$query="INSERT INTO `cleantalk_sfw` VALUES ";
+						for($i=0;$i<sizeof($result);$i++)
+						{
+							if($i==sizeof($result)-1)
+							{
+								$query.="(".$result[$i][0].",".$result[$i][1].");";
+							}
+							else
+							{
+								$query.="(".$result[$i][0].",".$result[$i][1]."), ";
+							}
+						}
+						$result = $dbr->query($query);
+						$dbr->commit();
+						$settings['lastSFWUpdate'] = time();
+						$fp = fopen( $wgCTDataStoreFile, 'w' ) or error_log( 'Could not open file:' . $wgCTDataStoreFile );
+						fwrite( $fp, json_encode($settings) );
+						fclose( $fp ); 
+					}
+				}
+				
+				/* Check IP here */
+				
+				$is_sfw_check=true;
+			   	$ip=CleantalkGetIP();
+			   	$ip=array_unique($ip);
+			   	$key=$wgCTAccessKey;
+			   	for($i=0;$i<sizeof($ip);$i++)
+				{
+			    	if(isset($_COOKIE['ct_sfw_pass_key']) && $_COOKIE['ct_sfw_pass_key']==md5($ip[$i].$key))
+			    	{
+			    		$is_sfw_check=false;
+			    		if(isset($_COOKIE['ct_sfw_passed']))
+			    		{
+			    			@setcookie ('ct_sfw_passed', '0', 1, "/");
+			    		}
+			    	}
+			    }
+				if($is_sfw_check)
+				{
+					$sfw = new CleanTalkSFW();
+					$sfw->cleantalk_get_real_ip();
+					$sfw->check_ip();
+					if($sfw->result)
+					{
+						$sfw->sfw_die();
+					}
+				}
+				
+				/* Finish checking IP */
+			}
+		}
+		
+		/* SFW ends */
+		
+		if($wgCTShowLink)
+		{
+			$text.="<div style='width:100%;text-align:center;'><a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.</div>";
+		}
 		return true;
 	}
+}
+
+function CleantalkGetIP()
+{
+	$result=Array();
+	if ( function_exists( 'apache_request_headers' ) )
+	{
+		$headers = apache_request_headers();
+	}
+	else
+	{
+		$headers = $_SERVER;
+	}
+	if ( array_key_exists( 'X-Forwarded-For', $headers ) )
+	{
+		$the_ip=explode(",", trim($headers['X-Forwarded-For']));
+		$result[] = trim($the_ip[0]);
+	}
+	if ( array_key_exists( 'HTTP_X_FORWARDED_FOR', $headers ))
+	{
+		$the_ip=explode(",", trim($headers['HTTP_X_FORWARDED_FOR']));
+		$result[] = trim($the_ip[0]);
+	}
+	$result[] = filter_var( $_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
+
+	if(isset($_GET['sfw_test_ip']))
+	{
+		$result[]=$_GET['sfw_test_ip'];
+	}
+	return $result;
 }

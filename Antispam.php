@@ -71,7 +71,13 @@ $wgCTAdminNotificaionInteval = 10800;
  * Show link to CleanTalk
  * Enabling this option places a small link under the comment form that lets others know what anti-spam tool protects your site.
  */
-$wgCTShowLink = false;
+$wgCTShowLink = true;
+
+/**
+ * Show link to CleanTalk
+ * Enabling this option places a small link under the comment form that lets others know what anti-spam tool protects your site.
+ */
+$wgCTSFW = false;
 
 /**
  * Extension settings store file 
@@ -99,7 +105,4 @@ $wgHooks['EditPage::showEditForm:initial'][] = 'CTHooks::onShowEditForm';
 // Skip edit test for Administrators
 $wgGroupPermissions['sysop']['cleantalk-bypass'] = true;
 
-if($wgCTShowLink)
-{
-	$wgHooks["SkinAfterBottomScripts"][] = "CTHooks::onSkinAfterBottomScripts";
-}
+$wgHooks["SkinAfterBottomScripts"][] = "CTHooks::onSkinAfterBottomScripts";
