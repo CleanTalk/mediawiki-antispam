@@ -84,7 +84,7 @@ class CTHooks {
         }
 
         // Disallow edit with CleanTalk comment 
-        if (!$allowEdit || $ctResult->allow == 0 && ($ctResult->spam || $ctResult->stop_queue)) {
+        if (!$allowEdit || $ctResult->allow == 0) {
             $error = $ctResult->comment;
             
             // Converting links to wikitext format
