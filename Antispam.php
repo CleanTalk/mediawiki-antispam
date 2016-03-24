@@ -35,7 +35,7 @@ $wgCTServerURL = 'http://moderate.cleantalk.org/api2.0';
 /**
  * Extension agent name and version 
  */
-$wgCTAgent = 'mediawiki-15';
+$wgCTAgent = 'mediawiki-16';
 
 /**
  * Extension name 
@@ -74,10 +74,23 @@ $wgCTAdminNotificaionInteval = 10800;
 $wgCTShowLink = true;
 
 /**
- * Show link to CleanTalk
- * Enabling this option places a small link under the comment form that lets others know what anti-spam tool protects your site.
+ * SpamFireWall
+ * Enabling this option makes SpamFileWall feature active.
  */
 $wgCTSFW = false;
+
+/**
+ * Edit new edits only
+ * Check all edits or new edits only.
+ */
+$wgCTNewEditsOnly = false;
+
+/**
+ * Minimal edits count to skip edit checking
+ * Checking will skipped for users with getEditCount() more than this value.
+ * It doesn'f affect when $wgCTNewEditsOnly == true
+ */
+$wgCTMinEditCount = 10;
 
 /**
  * Extension settings store file 
@@ -90,7 +103,7 @@ $wgExtensionCredits['antispam'][] = array(
 	'author' => 'Denis Shagimuratov',
 	'url' => 'https://www.mediawiki.org/wiki/Extension:Antispam',
 	'descriptionmsg' => 'cleantalk-desc',
-	'version' => '1.5',
+	'version' => '1.6',
 );
 
 $wgAutoloadClasses['CTBody'] = __DIR__ . '/Antispam.body.php';
