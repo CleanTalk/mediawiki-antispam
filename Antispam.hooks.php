@@ -36,12 +36,23 @@ class CTHooks {
 	 * @return bool
 	 */
 	public static function onEditFilter (  $editor, $text, $section, &$error, $summary ) {
-        global $wgCTAccessKey, $wgCTServerURL, $wgRequest, $wgCTAgent, $wgCTExtName;
+        global $wgCTAccessKey, $wgCTServerURL, $wgRequest, $wgCTAgent, $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount;
         
         $allowEdit = true;
 
         // Skip antispam test if editor member of special group
         if ( $editor->getArticle()->getContext()->getUser()->isAllowed('cleantalk-bypass') ) {
+            return $allowEdit;
+        }
+        
+        // Skip antispam test of not new edit if flag is set
+        if ( $wgCTNewEditsOnly && !$editor->isNew) {
+            return $allowEdit;
+        }
+
+        // Skip antispam test for user with getEditCount() more than setted value
+        $edit_count = $editor->getArticle()->getContext()->getUser()->getEditCount();
+        if ( isset($edit_count) && $edit_count > $wgCTMinEditCount ) {
             return $allowEdit;
         }
 
@@ -51,7 +62,7 @@ class CTHooks {
         $ctRequest->auth_key = $wgCTAccessKey;
         $ctRequest->sender_email = $editor->getArticle()->getContext()->getUser()->mEmail; 
         $ctRequest->sender_nickname = $editor->getArticle()->getContext()->getUser()->mName;
-        $ctRequest->message = $text; 
+        $ctRequest->message = $editor->getTitle()->getText() . "\n \n" . $summary . "\n \n" . $text;
         $ctRequest->agent = $wgCTAgent;
         $ctRequest->sender_ip = $wgRequest->getIP(); 
         $ctRequest->js_on = CTBody::JSTest(); 
@@ -224,7 +235,7 @@ class CTHooks {
 			   	$key=$wgCTAccessKey;
 			   	for($i=0;$i<sizeof($ip);$i++)
 				{
-			    	if(isset($_COOKIE['ct_sfw_pass_key']) && $_COOKIE['ct_sfw_pass_key']==md5($ip[$i].$key))
+			    	if(isset($_COOKIE['ct_sfw_pass_key']) && isset($ip[$i]) && $_COOKIE['ct_sfw_pass_key']==md5($ip[$i].$key))
 			    	{
 			    		$is_sfw_check=false;
 			    		if(isset($_COOKIE['ct_sfw_passed']))
