@@ -120,6 +120,5 @@ $wgHooks['UploadVerifyFile'][] = 'CTHooks::onUploadFilter';
 
 // Skip edit test for Administrators
 $wgGroupPermissions['sysop']['cleantalk-bypass'] = true;
-$wgGroupPermissions['veteran']['cleantalk-bypass'] = true;
 
 $wgHooks["SkinAfterBottomScripts"][] = "CTHooks::onSkinAfterBottomScripts";
