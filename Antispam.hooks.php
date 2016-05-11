@@ -4,6 +4,20 @@ class CTHooks {
 
 	/**
 	 * Some HTML&JS code for JavaScript test 
+	 * @param UploadForm $editPage
+	 * @return bool
+	 */
+    public static function onShowUploadForm( $editPage ) {
+        global $wgCTSubmitTimeLabel;
+
+        $editPage->uploadFormTextTop = CTBody::AddJSCode();
+        
+        $_SESSION[$wgCTSubmitTimeLabel] = time();
+        
+        return true;
+    }
+	/**
+	 * Some HTML&JS code for JavaScript test 
 	 * @param HTMLForm $form
 	 * @return bool
 	 */
@@ -31,6 +45,90 @@ class CTHooks {
         return true;
     }
 	
+    /**
+	 * Upload spam test 
+	 * UploadBase $upload
+	 * string $mime
+	 * bool|array $error
+	 * @return none
+	 */
+    public static function onUploadFilter ( $upload, $mime, &$error ) {
+        global $wgCTAccessKey, $wgCTServerURL, $wgRequest, $wgCTAgent, $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount, $wgUser;
+        
+        # Skip spam check if error exists already
+        if ($error !== TRUE) {
+            return;
+        }
+        
+        $allowUpload = true;
+
+        // Skip antispam test if user is member of special group
+        if ( $wgUser->isAllowed('cleantalk-bypass') ) {
+            return;
+        }
+
+        // Skip antispam test for user with getEditCount() more than setted value
+        $edit_count = $wgUser->getEditCount();
+        if ( isset($edit_count) && $edit_count > $wgCTMinEditCount ) {
+            return;
+        }
+
+        // The facility in which to store the query parameters
+        $ctRequest = new CleantalkRequest();
+
+        $ctRequest->auth_key = $wgCTAccessKey;
+        $ctRequest->sender_email = $wgUser->mEmail;
+        $ctRequest->sender_nickname = $wgUser->mName;
+        $ctRequest->message = $wgRequest->getVal('wpUploadDescription');
+        $ctRequest->agent = $wgCTAgent;
+        $ctRequest->sender_ip = $wgRequest->getIP(); 
+        $ctRequest->js_on = CTBody::JSTest(); 
+        $ctRequest->submit_time = CTBody::SubmitTimeTest(); 
+        
+        $ctRequest->sender_info=json_encode(
+	    Array(
+		'page_url' => htmlspecialchars(@$_SERVER['SERVER_NAME'].@$_SERVER['REQUEST_URI']),
+    		'REFFERRER' => $_SERVER['HTTP_REFERER'],
+    		'USER_AGENT' => $_SERVER['HTTP_USER_AGENT'],
+	    )
+	);
+
+        $ct = new Cleantalk();
+        $ct->server_url = $wgCTServerURL;
+
+        // Check
+        $ctResult = $ct->isAllowMessage($ctRequest);
+
+        if ( $ctResult->errno != 0 ) {
+        	if(CTBody::JSTest() != 1)
+        	{
+        		$ctResult->allow = 0;
+        		$ctResult->comment = "Forbidden. Please, enable Javascript.";
+        		$allowUpload = false;
+        	}
+        	else
+        	{
+        		$ctResult->allow = 1;
+        		$allowUpload = true;
+        	}
+        }
+
+        // Disallow edit with CleanTalk comment 
+        if (!$allowUpload || $ctResult->allow == 0) {
+            // Converting links to wikitext format
+            $errorText = preg_replace("(<a\shref=\"([^\s]+)\".+>([a-f0-9]+)</a>)", "[$1 $2]", $ctResult->comment);
+
+            // Fill $error parameter as array with error text
+            $error = array($errorText);
+        }
+       
+        if ($ctResult->inactive === 1) {
+            CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
+        }
+
+        return;
+    }
+    
     /**
 	 * Edit spam test 
 	 * @return bool
