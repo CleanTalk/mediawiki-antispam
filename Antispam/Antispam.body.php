@@ -48,7 +48,54 @@ class CTBody {
 
         return $submit_time;
     } 
-    
+    /**
+     * Cookie test 
+     * @return 
+     */
+    public static function CookieTest() {
+        global $wgCTAccessKey;
+        
+        
+        
+        // Cookie names to validate
+        $cookie_test_value = array(
+            'cookies_names' => array(),
+            'check_value' => $wgCTAccessKey,
+        );
+            
+        // Submit time
+        $apbct_timestamp = time();
+        setcookie('apbct_timestamp', $apbct_timestamp, 0, '/');
+        $cookie_test_value['cookies_names'][] = 'apbct_timestamp';
+        $cookie_test_value['check_value'] .= $apbct_timestamp;
+
+        // Pervious referer
+        if(!empty($_SERVER['HTTP_REFERER'])){
+            setcookie('apbct_prev_referer', $_SERVER['HTTP_REFERER'], 0, '/');
+            $cookie_test_value['cookies_names'][] = 'apbct_prev_referer';
+            $cookie_test_value['check_value'] .= $_SERVER['HTTP_REFERER'];
+        }
+        
+        // Landing time
+        if(isset($_COOKIE['apbct_site_landing_ts'])){
+            $site_landing_timestamp = $_COOKIE['apbct_site_landing_ts'];
+        }else{
+            $site_landing_timestamp = time();
+            setcookie('apbct_site_landing_ts', $site_landing_timestamp, 0, '/');
+        }
+        $cookie_test_value['cookies_names'][] = 'apbct_site_landing_ts';
+        $cookie_test_value['check_value'] .= $site_landing_timestamp;
+        
+        // Page hits
+        $page_hits = isset($_COOKIE['apbct_page_hits']) && apbct_cookies_test() ? $_COOKIE['apbct_page_hits'] + 1 : 1;
+        setcookie('apbct_page_hits', $page_hits, 0, '/');
+        $cookie_test_value['cookies_names'][] = 'apbct_page_hits';
+        $cookie_test_value['check_value'] .= $page_hits;
+        
+        // Cookies test
+        $cookie_test_value['check_value'] = md5($cookie_test_value['check_value']);
+        setcookie('apbct_cookies_test', json_encode($cookie_test_value), 0, '/');
+    }    
     /**
 	 * Adds hidden field to form for JavaScript test 
 	 * @return string 
