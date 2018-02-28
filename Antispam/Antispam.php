@@ -40,7 +40,7 @@ $wgCTAgent = 'mediawiki-18';
 /**
  * Extension name 
  */
-$wgCTExtName = 'Anti-spam by CleanTalk';
+$wgCTExtName = 'Antispam by CleanTalk';
 
 /**
  * Field name for JavaScript test 
@@ -64,7 +64,7 @@ $wgCTAdminNotificaionInteval = 10800;
 
 /**
  * Show link to CleanTalk
- * Enabling this option places a small link under the comment form that lets others know what anti-spam tool protects your site.
+ * Enabling this option places a small link under the comment form that lets others know what antispam tool protects your site.
  */
 $wgCTShowLink = true;
 
