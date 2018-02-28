@@ -8,11 +8,9 @@ class CTHooks {
 	 * @return bool
 	 */
     public static function onShowUploadForm( $editPage ) {
-        global $wgCTSubmitTimeLabel;
 
         $editPage->uploadFormTextTop = CTBody::AddJSCode();
         CTBody::CookieTest();
-        $_SESSION[$wgCTSubmitTimeLabel] = time();
         
         return true;
     }
@@ -22,11 +20,9 @@ class CTHooks {
 	 * @return bool
 	 */
     public static function onShowEditForm( $editPage ) {
-        global $wgCTSubmitTimeLabel;
 
         $editPage->editFormTextBottom = CTBody::AddJSCode();
         CTBody::CookieTest();
-        $_SESSION[$wgCTSubmitTimeLabel] = time();
         
         return true;
     }
@@ -36,11 +32,9 @@ class CTHooks {
 	 * @return bool
 	 */
     public static function onUserCreateForm( &$template ) {
-        global $wgCTSubmitTimeLabel;
         
         $template->set( 'header', CTBody::AddJSCode());
         CTBody::CookieTest();
-        $_SESSION[$wgCTSubmitTimeLabel] = time();
         
         return true;
     }
@@ -83,7 +77,7 @@ class CTHooks {
         $ctRequest->agent = $wgCTAgent;
         $ctRequest->sender_ip = $wgRequest->getIP(); 
         $ctRequest->js_on = CTBody::JSTest(); 
-        $ctRequest->submit_time = CTBody::SubmitTimeTest(); 
+        $ctRequest->submit_time = isset($_COOKIE['apbct_timestamp']) ? time() - intval($_COOKIE['apbct_timestamp']) : 0; 
         
         $ctRequest->sender_info=json_encode(
 	    Array(
@@ -165,7 +159,7 @@ class CTHooks {
         $ctRequest->agent = $wgCTAgent;
         $ctRequest->sender_ip = $wgRequest->getIP(); 
         $ctRequest->js_on = CTBody::JSTest(); 
-        $ctRequest->submit_time = CTBody::SubmitTimeTest(); 
+        $ctRequest->submit_time = isset($_COOKIE['apbct_timestamp']) ? time() - intval($_COOKIE['apbct_timestamp']) : 0; 
         $ctRequest->sender_info=json_encode(
 	    Array(
 		'page_url' => htmlspecialchars(@$_SERVER['SERVER_NAME'].@$_SERVER['REQUEST_URI']),
@@ -238,7 +232,7 @@ class CTHooks {
         $ctRequest->agent = $wgCTAgent;
         $ctRequest->sender_ip = $wgRequest->getIP(); 
         $ctRequest->js_on = CTBody::JSTest(); 
-        $ctRequest->submit_time = CTBody::SubmitTimeTest(); 
+        $ctRequest->submit_time = isset($_COOKIE['apbct_timestamp']) ? time() - intval($_COOKIE['apbct_timestamp']) : 0; 
         $ctRequest->sender_info=json_encode(
 	    Array(
 		'page_url' => htmlspecialchars(@$_SERVER['SERVER_NAME'].@$_SERVER['REQUEST_URI']),
@@ -384,30 +378,37 @@ class CTHooks {
 
 function CleantalkGetIP()
 {
+    $result=Array();
     // Getting headers
     $headers = function_exists('apache_request_headers') ? apache_request_headers() : $_SERVER;
 
-    // Getting IP for validating
-    if (array_key_exists( 'X-Forwarded-For', $headers )){
-        $ip = explode(",", trim($headers['X-Forwarded-For']));
+    if ( array_key_exists( 'X-Forwarded-For', $headers ) )
+    {
+        $ip=explode(",", trim($headers['X-Forwarded-For']));
         $ip = trim($ip[0]);
-    }elseif(array_key_exists( 'HTTP_X_FORWARDED_FOR', $headers)){
-        $ip = explode(",", trim($headers['HTTP_X_FORWARDED_FOR']));
+    }
+    elseif ( array_key_exists( 'HTTP_X_FORWARDED_FOR', $headers ))
+    {
+        $ip=explode(",", trim($headers['HTTP_X_FORWARDED_FOR']));
         $ip = trim($ip[0]);
-    }else{
+    }
+    else {
         $ip = $_SERVER['REMOTE_ADDR'];
     }
 
     // Validating IP
     // IPv4
     if(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)){
-        $the_ip = $ip;
+        $result[] = $ip;
     // IPv6
     }elseif(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)){
-        $the_ip = $ip;
+        $result[] = $ip;
     // Unknown
-    }else{
-        $the_ip = null;
+    }    
+    
+    if(isset($_GET['sfw_test_ip']))
+    {
+        $result[]=$_GET['sfw_test_ip'];
     }
-    return $the_ip;
+    return $result;
 }

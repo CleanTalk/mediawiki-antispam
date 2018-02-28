@@ -33,21 +33,6 @@ class CTBody {
             
         return $result; 
     } 
-    
-    /**
-	 * Calculate form fill time 
-	 * @return 0|1|null 
-	 */
-    public static function SubmitTimeTest() {
-        global $wgCTSubmitTimeLabel;
-
-        $submit_time = null;
-        if (isset($_SESSION[$wgCTSubmitTimeLabel])) {
-            $submit_time = time() - (int) $_SESSION[$wgCTSubmitTimeLabel];
-        }
-
-        return $submit_time;
-    } 
     /**
      * Cookie test 
      * @return 

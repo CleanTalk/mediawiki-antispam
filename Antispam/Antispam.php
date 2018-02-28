@@ -48,11 +48,6 @@ $wgCTExtName = 'Anti-spam by CleanTalk';
 $wgCTHiddenFieldName = 'ct_checkjs';
 
 /**
- * Field name for JavaScript test 
- */
-$wgCTSubmitTimeLabel = 'ct_submit_time';
-
-/**
  * Default value for hidden field 
  */
 $wgCTHiddenFieldDefault = 0;
