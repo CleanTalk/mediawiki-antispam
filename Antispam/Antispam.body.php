@@ -86,12 +86,6 @@ class CTBody {
         $cookie_test_value['cookies_names'][] = 'apbct_site_landing_ts';
         $cookie_test_value['check_value'] .= $site_landing_timestamp;
         
-        // Page hits
-        $page_hits = isset($_COOKIE['apbct_page_hits']) && apbct_cookies_test() ? $_COOKIE['apbct_page_hits'] + 1 : 1;
-        setcookie('apbct_page_hits', $page_hits, 0, '/');
-        $cookie_test_value['cookies_names'][] = 'apbct_page_hits';
-        $cookie_test_value['check_value'] .= $page_hits;
-        
         // Cookies test
         $cookie_test_value['check_value'] = md5($cookie_test_value['check_value']);
         setcookie('apbct_cookies_test', json_encode($cookie_test_value), 0, '/');
