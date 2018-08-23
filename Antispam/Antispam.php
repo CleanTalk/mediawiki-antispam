@@ -4,7 +4,11 @@ if ( !defined( 'MEDIAWIKI' ) ) {
 	die;
 }
 
-require_once('cleantalk.class.php' );
+require_once('Cleantalk.php' );
+require_once('CleantalkRequest.php' );
+require_once('CleantalkResponse.php' );
+require_once('CleantalkHelper.php' );
+require_once('CleantalkSFW.php' );
 
 /**
  * cleantalk.org is a cloud antispam service 
@@ -35,7 +39,7 @@ $wgCTServerURL = 'http://moderate.cleantalk.org/api2.0';
 /**
  * Extension agent name and version 
  */
-$wgCTAgent = 'mediawiki-18';
+$wgCTAgent = 'mediawiki-19';
 
 /**
  * Extension name 

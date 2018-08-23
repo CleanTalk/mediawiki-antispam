@@ -2,50 +2,50 @@
 
 class CTHooks {
 
-	/**
-	 * Some HTML&JS code for JavaScript test 
-	 * @param UploadForm $editPage
-	 * @return bool
-	 */
+    /**
+     * Some HTML&JS code for JavaScript test 
+     * @param UploadForm $editPage
+     * @return bool
+     */
     public static function onShowUploadForm( $editPage ) {
 
         $editPage->uploadFormTextTop = CTBody::AddJSCode();
-        CTBody::CookieTest();
+        CTBody::ctSetCookie();
         
         return true;
     }
-	/**
-	 * Some HTML&JS code for JavaScript test 
-	 * @param HTMLForm $form
-	 * @return bool
-	 */
+    /**
+     * Some HTML&JS code for JavaScript test 
+     * @param HTMLForm $form
+     * @return bool
+     */
     public static function onShowEditForm( $editPage ) {
 
         $editPage->editFormTextBottom = CTBody::AddJSCode();
-        CTBody::CookieTest();
+        CTBody::ctSetCookie();
         
         return true;
     }
-	/**
-	 * Some HTML&JS code for JavaScript test 
-	 * @param HTMLForm $form
-	 * @return bool
-	 */
+    /**
+     * Some HTML&JS code for JavaScript test 
+     * @param HTMLForm $form
+     * @return bool
+     */
     public static function onUserCreateForm( &$template ) {
         
         $template->set( 'header', CTBody::AddJSCode());
-        CTBody::CookieTest();
+        CTBody::ctSetCookie();
         
         return true;
     }
-	
+    
     /**
-	 * Upload spam test 
-	 * UploadBase $upload
-	 * string $mime
-	 * bool|array $error
-	 * @return none
-	 */
+     * Upload spam test 
+     * UploadBase $upload
+     * string $mime
+     * bool|array $error
+     * @return none
+     */
     public static function onUploadFilter ( $upload, $mime, &$error ) {
         global $wgCTAccessKey, $wgCTServerURL, $wgRequest, $wgCTAgent, $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount, $wgUser;
         
@@ -67,45 +67,26 @@ class CTHooks {
             return;
         }
 
-        // The facility in which to store the query parameters
-        $ctRequest = new CleantalkRequest();
-
-        $ctRequest->auth_key = $wgCTAccessKey;
-        $ctRequest->sender_email = $wgUser->mEmail;
-        $ctRequest->sender_nickname = $wgUser->mName;
-        $ctRequest->message = $wgRequest->getVal('wpUploadDescription');
-        $ctRequest->agent = $wgCTAgent;
-        $ctRequest->sender_ip = $wgRequest->getIP(); 
-        $ctRequest->js_on = CTBody::JSTest(); 
-        $ctRequest->submit_time = isset($_COOKIE['apbct_timestamp']) ? time() - intval($_COOKIE['apbct_timestamp']) : 0; 
-        
-        $ctRequest->sender_info=json_encode(
-	    Array(
-		'page_url' => htmlspecialchars(@$_SERVER['SERVER_NAME'].@$_SERVER['REQUEST_URI']),
-    		'REFFERRER' => $_SERVER['HTTP_REFERER'],
-    		'USER_AGENT' => $_SERVER['HTTP_USER_AGENT'],
-            'REFFERRER_PREVIOUS' => isset($_COOKIE['apbct_prev_referer'])?$_COOKIE['apbct_prev_referer']:0,
-	    )
-	);
-
-        $ct = new Cleantalk();
-        $ct->server_url = $wgCTServerURL;
-
         // Check
-        $ctResult = $ct->isAllowMessage($ctRequest);
-
+        $ctResult = CTBody::onSpamCheck(
+            'check_message', array(
+                'message' => $wgRequest->getVal('wpUploadDescription'),
+                'sender_email' => $wgUser->mEmail,
+                'sender_nickname' => $wgUser->mName,
+            )
+        );
         if ( $ctResult->errno != 0 ) {
-        	if(CTBody::JSTest() != 1)
-        	{
-        		$ctResult->allow = 0;
-        		$ctResult->comment = "Forbidden. Please, enable Javascript.";
-        		$allowUpload = false;
-        	}
-        	else
-        	{
-        		$ctResult->allow = 1;
-        		$allowUpload = true;
-        	}
+            if(CTBody::JSTest() != 1)
+            {
+                $ctResult->allow = 0;
+                $ctResult->comment = "Forbidden. Please, enable Javascript.";
+                $allowUpload = false;
+            }
+            else
+            {
+                $ctResult->allow = 1;
+                $allowUpload = true;
+            }
         }
 
         // Disallow edit with CleanTalk comment 
@@ -125,10 +106,10 @@ class CTHooks {
     }
     
     /**
-	 * Edit spam test 
-	 * @return bool
-	 */
-	public static function onEditFilter (  $editor, $text, $section, &$error, $summary ) {
+     * Edit spam test 
+     * @return bool
+     */
+    public static function onEditFilter (  $editor, $text, $section, &$error, $summary ) {
         global $wgCTAccessKey, $wgCTServerURL, $wgRequest, $wgCTAgent, $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount;
         
         $allowEdit = true;
@@ -149,31 +130,14 @@ class CTHooks {
             return $allowEdit;
         }
 
-        // The facility in which to store the query parameters
-        $ctRequest = new CleantalkRequest();
-
-        $ctRequest->auth_key = $wgCTAccessKey;
-        $ctRequest->sender_email = $editor->getArticle()->getContext()->getUser()->mEmail; 
-        $ctRequest->sender_nickname = $editor->getArticle()->getContext()->getUser()->mName;
-        $ctRequest->message = $editor->getTitle()->getText() . "\n \n" . $summary . "\n \n" . $text;
-        $ctRequest->agent = $wgCTAgent;
-        $ctRequest->sender_ip = $wgRequest->getIP(); 
-        $ctRequest->js_on = CTBody::JSTest(); 
-        $ctRequest->submit_time = isset($_COOKIE['apbct_timestamp']) ? time() - intval($_COOKIE['apbct_timestamp']) : 0; 
-        $ctRequest->sender_info=json_encode(
-	    Array(
-		'page_url' => htmlspecialchars(@$_SERVER['SERVER_NAME'].@$_SERVER['REQUEST_URI']),
-    		'REFFERRER' => $_SERVER['HTTP_REFERER'],
-    		'USER_AGENT' => $_SERVER['HTTP_USER_AGENT'],
-            'REFFERRER_PREVIOUS' => isset($_COOKIE['apbct_prev_referer'])?$_COOKIE['apbct_prev_referer']:0,
-	    )
-	);
-
-        $ct = new Cleantalk();
-        $ct->server_url = $wgCTServerURL;
-
         // Check
-        $ctResult = $ct->isAllowMessage($ctRequest);
+        $ctResult = CTBody::onSpamCheck(
+            'check_message', array(
+                'message' => $editor->getTitle()->getText() . "\n \n" . $summary . "\n \n" . $text,
+                'sender_email' => $editor->getArticle()->getContext()->getUser()->mEmail,
+                'sender_nickname' => $editor->getArticle()->getContext()->getUser()->mName,
+            )
+        );
 
         // Allow edit if we have any API errors
         /*if ( $ctResult->errno != 0 ) {
@@ -181,17 +145,17 @@ class CTHooks {
         }*/
         if ( $ctResult->errno != 0 ) 
         {
-        	if(CTBody::JSTest()!=1)
-        	{
-        		$ctResult->allow=0;
-        		$ctResult->comment = "Forbidden. Please, enable Javascript.";
-        		$allowEdit = false;
-        	}
-        	else
-        	{
-        		$ctResult->allow=1;
-        		$allowEdit = true;
-        	}
+            if(CTBody::JSTest()!=1)
+            {
+                $ctResult->allow=0;
+                $ctResult->comment = "Forbidden. Please, enable Javascript.";
+                $allowEdit = false;
+            }
+            else
+            {
+                $ctResult->allow=1;
+                $allowEdit = true;
+            }
         }
 
         // Disallow edit with CleanTalk comment 
@@ -212,54 +176,36 @@ class CTHooks {
         }
 
         return $allowEdit;
-	}
+    }
     
     /**
-	 * Account spam test 
-	 * @return bool
-	 */
-	public static function onAbortNewAccount ( $user, &$message ) {
+     * Account spam test 
+     * @return bool
+     */
+    public static function onAbortNewAccount ( $user, &$message ) {
         global $wgCTAccessKey, $wgCTServerURL, $wgRequest, $wgCTAgent, $wgCTExtName;
         
         $allowAccount = true;
-        
-        // The facility in which to store the query parameters
-        $ctRequest = new CleantalkRequest();
-
-        $ctRequest->auth_key = $wgCTAccessKey;
-        $ctRequest->sender_email = $user->mEmail; 
-        $ctRequest->sender_nickname = $user->mName; 
-        $ctRequest->agent = $wgCTAgent;
-        $ctRequest->sender_ip = $wgRequest->getIP(); 
-        $ctRequest->js_on = CTBody::JSTest(); 
-        $ctRequest->submit_time = isset($_COOKIE['apbct_timestamp']) ? time() - intval($_COOKIE['apbct_timestamp']) : 0; 
-        $ctRequest->sender_info=json_encode(
-	    Array(
-		'page_url' => htmlspecialchars(@$_SERVER['SERVER_NAME'].@$_SERVER['REQUEST_URI']),
-    		'REFFERRER' => $_SERVER['HTTP_REFERER'],
-    		'USER_AGENT' => $_SERVER['HTTP_USER_AGENT'],
-            'REFFERRER_PREVIOUS' => isset($_COOKIE['apbct_prev_referer'])?$_COOKIE['apbct_prev_referer']:0,
-	    )
-	);
-
-        $ct = new Cleantalk();
-        $ct->server_url = $wgCTServerURL;
 
         // Check
-        $ctResult = $ct->isAllowUser($ctRequest);
-
+        $ctResult = CTBody::onSpamCheck(
+            'check_newuser', array(
+                'sender_email' => $user->mEmail,
+                'sender_nickname' => $user->mName,
+            )
+        );
         // Allow account if we have any API errors
         if ( $ctResult->errno != 0 ) 
         {
-        	if(CTBody::JSTest()!=1)
-        	{
-        		$ctResult->allow=0;
-        		$ctResult->comment = "Forbidden. Please, enable Javascript.";
-        	}
-        	else
-        	{
-        		$ctResult->allow=1;
-        	}
+            if(CTBody::JSTest()!=1)
+            {
+                $ctResult->allow=0;
+                $ctResult->comment = "Forbidden. Please, enable Javascript.";
+            }
+            else
+            {
+                $ctResult->allow=1;
+            }
         }
 
         // Disallow account with CleanTalk comment 
@@ -273,142 +219,73 @@ class CTHooks {
         }
 
         return $allowAccount;
-	}
-	
-	public static function onSkinAfterBottomScripts( $skin, &$text )
-	{
-		global $wgCTShowLink, $wgCTSFW, $wgCTDataStoreFile, $wgCTAccessKey;
-		
-		/* SFW starts */
-		
-		if($wgCTSFW && file_exists($wgCTDataStoreFile))
-		{
-			$settings = file_get_contents($wgCTDataStoreFile);
-			
-			include_once("cleantalk-sfw.class.php");
-			
-			if ($settings)
-			{
-				$settings = json_decode($settings, true);
-				if(!isset($settings['lastSFWUpdate']))
-				{
-					$settings['lastSFWUpdate'] = 0;
-				}
-				if(time()-$settings['lastSFWUpdate'] > 30)
-				{
-					$dbr = wfGetDB(DB_MASTER);
-					$dbr->query("DROP TABLE IF EXISTS `cleantalk_sfw`;");
-					$dbr->commit();
-					$dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
-		`network` int(11) unsigned NOT NULL,
-		`mask` int(11) unsigned NOT NULL,
-		INDEX (  `network` ,  `mask` )
-		) ENGINE = MYISAM ;");
-					$dbr->commit();
-					$data = Array(	'auth_key' => $wgCTAccessKey,
-						'method_name' => '2s_blacklists_db'
-		 			);
-		 			$result=sendRawRequest('https://api.cleantalk.org/2.1',$data,false);
-					$result=json_decode($result, true);
-					if(isset($result['data']))
-					{
-						$result=$result['data'];
-						$query="INSERT INTO `cleantalk_sfw` VALUES ";
-						for($i=0;$i<sizeof($result);$i++)
-						{
-							if($i==sizeof($result)-1)
-							{
-								$query.="(".$result[$i][0].",".$result[$i][1].");";
-							}
-							else
-							{
-								$query.="(".$result[$i][0].",".$result[$i][1]."), ";
-							}
-						}
-						$result = $dbr->query($query);
-						$dbr->commit();
-						$settings['lastSFWUpdate'] = time();
-						$fp = fopen( $wgCTDataStoreFile, 'w' ) or error_log( 'Could not open file:' . $wgCTDataStoreFile );
-						fwrite( $fp, json_encode($settings) );
-						fclose( $fp ); 
-					}
-				}
-				
-				/* Check IP here */
-				
-				$is_sfw_check=true;
-			   	$ip=CleantalkGetIP();
-			   	$ip=array_unique($ip);
-			   	$key=$wgCTAccessKey;
-			   	for($i=0;$i<sizeof($ip);$i++)
-				{
-			    	if(isset($_COOKIE['ct_sfw_pass_key']) && isset($ip[$i]) && $_COOKIE['ct_sfw_pass_key']==md5($ip[$i].$key))
-			    	{
-			    		$is_sfw_check=false;
-			    		if(isset($_COOKIE['ct_sfw_passed']))
-			    		{
-			    			@setcookie ('ct_sfw_passed', '0', 1, "/");
-			    		}
-			    	}
-			    }
-				if($is_sfw_check)
-				{
-					$sfw = new CleanTalkSFW();
-					$sfw->cleantalk_get_real_ip();
-					$sfw->check_ip();
-					if($sfw->result)
-					{
-						$sfw->sfw_die();
-					}
-				}
-				
-				/* Finish checking IP */
-			}
-		}
-		
-		/* SFW ends */
-		
-		if($wgCTShowLink)
-		{
-			$text.="<div style='width:100%;text-align:center;'><a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.</div>";
-		}
-		return true;
-	}
-}
-
-function CleantalkGetIP()
-{
-    $result=Array();
-    // Getting headers
-    $headers = function_exists('apache_request_headers') ? apache_request_headers() : $_SERVER;
-
-    if ( array_key_exists( 'X-Forwarded-For', $headers ) )
-    {
-        $ip=explode(",", trim($headers['X-Forwarded-For']));
-        $ip = trim($ip[0]);
     }
-    elseif ( array_key_exists( 'HTTP_X_FORWARDED_FOR', $headers ))
-    {
-        $ip=explode(",", trim($headers['HTTP_X_FORWARDED_FOR']));
-        $ip = trim($ip[0]);
-    }
-    else {
-        $ip = $_SERVER['REMOTE_ADDR'];
-    }
-
-    // Validating IP
-    // IPv4
-    if(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)){
-        $result[] = $ip;
-    // IPv6
-    }elseif(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)){
-        $result[] = $ip;
-    // Unknown
-    }    
     
-    if(isset($_GET['sfw_test_ip']))
+    public static function onSkinAfterBottomScripts( $skin, &$text )
     {
-        $result[]=$_GET['sfw_test_ip'];
+        global $wgCTShowLink, $wgCTSFW, $wgCTDataStoreFile, $wgCTAccessKey;
+        
+        /* SFW starts */
+        
+        if($wgCTSFW && file_exists($wgCTDataStoreFile))
+        {
+            $settings = file_get_contents($wgCTDataStoreFile);
+            $sfw = new CleanTalkSFW();
+
+            if ($settings)
+            {
+                $settings = json_decode($settings, true);
+                CTBody::createSFWTables();
+                if(!isset($settings['lastSFWUpdate']) || ($settings['lastSFWUpdate'] && (time()-$settings['lastSFWUpdate'] > 86400)))
+                {                   
+                    $sfw->sfw_update($wgCTAccessKey);
+                    $settings['lastSFWUpdate'] = time();                                       
+                }
+                if (!isset($settings['lastSFWSendLogs']) || $settings['lastSFWSendLogs'] && (time() - $settings['lastSFWSendLogs'] > 3600))
+                {
+                    $sfw->send_logs($wgCTAccessKey); 
+                    $settings['lastSFWSendLogs'] = time();                                        
+                }
+                $fp = fopen( $wgCTDataStoreFile, 'w' ) or error_log( 'Could not open file:' . $wgCTDataStoreFile );
+                fwrite( $fp, json_encode($settings) );
+                fclose( $fp );              
+                /* Check IP here */
+                
+                $is_sfw_check = true;
+                $sfw->ip_array = (array)CleantalkSFW::ip_get(array('real'), true);  
+
+                foreach($sfw->ip_array as $key => $value)
+                {
+                    if(isset($_COOKIE['apbct_sfw_pass_key']) && $_COOKIE['apbct_sfw_pass_key'] == md5($value . $wgCTAccessKey))
+                    {
+                        $is_sfw_check=false;
+                        if(isset($_COOKIE['apbct_sfw_passed']))
+                        {
+                            @setcookie ('apbct_sfw_passed'); //Deleting cookie
+                            $sfw->sfw_update_logs($value, 'passed');
+                        }
+                    }
+                } unset($key, $value);  
+
+                if($is_sfw_check)
+                {
+                    $sfw->check_ip();
+                    if($sfw->result)
+                    {
+                        $sfw->sfw_update_logs($sfw->blocked_ip, 'blocked');
+                        $sfw->sfw_die($wgCTAccessKey);
+                    }
+                }               
+                /* Finish checking IP */
+            }
+        }
+        
+        /* SFW ends */
+        
+        if($wgCTShowLink)
+        {
+            $text.="<div style='width:100%;text-align:center;'><a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.</div>";
+        }
+        return true;
     }
-    return $result;
 }
