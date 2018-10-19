@@ -16,22 +16,15 @@ class CTBody {
      * @return 0|1|null 
      */
     public static function JSTest() {
-        global $wgRequest, $wgCTHiddenFieldName;
-        
-        $result = null;
-         
-        $jsPostValue = $wgRequest->getVal( $wgCTHiddenFieldName );
-        if ( $jsPostValue ) {
-            $challenge = self::getJSChallenge();
 
-            if ( preg_match( "/$/", $jsPostValue ) ) {
-                $result = 1;
-            } else {
-                $result = 0;
-            } 
-        }
-            
-        return $result; 
+        if(isset($_COOKIE['ct_checkjs'])){
+            if($_COOKIE['ct_checkjs'] == self::getJSChallenge())
+                return 1;
+            else
+                return 0;
+         }else{
+            return null;
+         }
     } 
     /**
      * Cookie test 
@@ -47,30 +40,24 @@ class CTBody {
             'cookies_names' => array(),
             'check_value' => $wgCTAccessKey,
         );
-            
-        // Submit time
-        $apbct_timestamp = time();
-        setcookie('apbct_timestamp', $apbct_timestamp, 0, '/');
-        $cookie_test_value['cookies_names'][] = 'apbct_timestamp';
-        $cookie_test_value['check_value'] .= $apbct_timestamp;
 
         // Pervious referer
         if(!empty($_SERVER['HTTP_REFERER'])){
-            setcookie('apbct_prev_referer', $_SERVER['HTTP_REFERER'], 0, '/');
-            $cookie_test_value['cookies_names'][] = 'apbct_prev_referer';
+            setcookie('ct_prev_referer', $_SERVER['HTTP_REFERER'], 0, '/');
+            $cookie_test_value['cookies_names'][] = 'ct_prev_referer';
             $cookie_test_value['check_value'] .= $_SERVER['HTTP_REFERER'];
         }
         
         // Cookies test
         $cookie_test_value['check_value'] = md5($cookie_test_value['check_value']);
-        setcookie('apbct_cookies_test', json_encode($cookie_test_value), 0, '/');
+        setcookie('ct_cookies_test', json_encode($cookie_test_value), 0, '/');
     }
     public static function ctTestCookie()
     {
         global $wgCTAccessKey;
-        if(isset($_COOKIE['apbct_cookies_test'])){
+        if(isset($_COOKIE['ct_cookies_test'])){
             
-            $cookie_test = json_decode(stripslashes($_COOKIE['apbct_cookies_test']), true);
+            $cookie_test = json_decode(stripslashes($_COOKIE['ct_cookies_test']), true);
             
             $check_srting = $wgCTAccessKey;
             foreach($cookie_test['cookies_names'] as $cookie_name){
@@ -121,7 +108,7 @@ class CTBody {
         }
         $ct_request->auth_key = $wgCTAccessKey;
         $ct_request->agent = $wgCTAgent; 
-        $ct_request->submit_time = isset($_COOKIE['apbct_timestamp']) ? time() - intval($_COOKIE['apbct_timestamp']) : 0; 
+        $ct_request->submit_time = isset($_COOKIE['ct_ps_timestamp']) ? time() - intval($_COOKIE['ct_ps_timestamp']) : 0; 
         $ct_request->sender_ip = CleantalkHelper::ip_get(array('real'), false);
         $ct_request->x_forwarded_for = CleantalkHelper::ip_get(array('x_forwarded_for'), false);
         $ct_request->x_real_ip       = CleantalkHelper::ip_get(array('x_real_ip'), false);
@@ -132,7 +119,11 @@ class CTBody {
             'REFFERRER' => $_SERVER['HTTP_REFERER'],
             'USER_AGENT' => $_SERVER['HTTP_USER_AGENT'],
             'cookies_enabled' => CTBody::ctTestCookie(),            
-            'REFFERRER_PREVIOUS' => isset($_COOKIE['apbct_prev_referer'])?$_COOKIE['apbct_prev_referer']:0,
+            'REFFERRER_PREVIOUS' => isset($_COOKIE['ct_prev_referer'])?$_COOKIE['ct_prev_referer']:0,
+            'mouse_cursor_positions' => isset($_COOKIE['ct_pointer_data'])          ? json_decode(stripslashes($_COOKIE['ct_pointer_data']), true) : null,
+            'js_timezone'            => isset($_COOKIE['ct_timezone'])              ? $_COOKIE['ct_timezone']             : null,
+            'key_press_timestamp'    => isset($_COOKIE['ct_fkp_timestamp'])         ? $_COOKIE['ct_fkp_timestamp']        : null,
+            'page_set_timestamp'     => isset($_COOKIE['ct_ps_timestamp'])          ? $_COOKIE['ct_ps_timestamp']         : null,            
         ));  
         switch ($method) {
             case 'check_message':
@@ -154,33 +145,89 @@ class CTBody {
      * @return string 
      */
     public static function AddJSCode() {
-        global $wgCTHiddenFieldName, $wgCTHiddenFieldDefault, $wgCTExtName;
+        global $wgCTExtName;
         
-        $ct_checkjs_key = CTBody::getJSChallenge(); 
+        $html = '<script>
+        var ct_checkjs_val = '.self::getJSChallenge().',
+            d = new Date() 
+            ctTimeMs = new Date().getTime(),
+            ctMouseEventTimerFlag = true, //Reading interval flag
+            ctMouseData = "[",
+            ctMouseDataCounter = 0;
         
-        $field_id = $wgCTHiddenFieldName . '_' . md5( rand( 0, 1000 ) );
-        $html = '
-<input type="hidden" id="%s" name="%s" value="%s" />
-<script type="text/javascript">
-// <![CDATA[
-var ct_input_name = \'%s\';
-var ct_input_value = document.getElementById(ct_input_name).value;
-var ct_input_challenge = \'%s\'; 
+        function ctSetCookie(c_name, value) {
+            document.cookie = c_name + "=" + encodeURIComponent(value) + "; path=/";
+        }
+        
+        ctSetCookie("ct_ps_timestamp", Math.floor(new Date().getTime()/1000));
+        ctSetCookie("ct_fkp_timestamp", "0");
+        ctSetCookie("ct_pointer_data", "0");
+        ctSetCookie("ct_timezone", "0");
+        ctSetCookie("ct_checkjs", ct_checkjs_val);        
+        setTimeout(function(){
+            ctSetCookie("ct_timezone", d.getTimezoneOffset()/60*(-1));
+        },1000);
+        
+        //Reading interval
+        var ctMouseReadInterval = setInterval(function(){
+                ctMouseEventTimerFlag = true;
+            }, 150);
+            
+        //Writting interval
+        var ctMouseWriteDataInterval = setInterval(function(){
+                var ctMouseDataToSend = ctMouseData.slice(0,-1).concat("]");
+                ctSetCookie("ct_pointer_data", ctMouseDataToSend);
+            }, 1200);
+        
+        //Stop observing function
+        function ctMouseStopData(){
+            if(typeof window.addEventListener == "function")
+                window.removeEventListener("mousemove", ctFunctionMouseMove);
+            else
+                window.detachEvent("onmousemove", ctFunctionMouseMove);
+            clearInterval(ctMouseReadInterval);
+            clearInterval(ctMouseWriteDataInterval);                
+        }
+        
+        //Logging mouse position each 300 ms
+        var ctFunctionMouseMove = function output(event){
+            if(ctMouseEventTimerFlag == true){
+                var mouseDate = new Date();
+                ctMouseData += "[" + Math.round(event.pageY) + "," + Math.round(event.pageX) + "," + Math.round(mouseDate.getTime() - ctTimeMs) + "],";
+                ctMouseDataCounter++;
+                ctMouseEventTimerFlag = false;
+                if(ctMouseDataCounter >= 100)
+                    ctMouseStopData();
+            }
+        }
+        
+        //Stop key listening function
+        function ctKeyStopStopListening(){
+            if(typeof window.addEventListener == "function"){
+                window.removeEventListener("mousedown", ctFunctionFirstKey);
+                window.removeEventListener("keydown", ctFunctionFirstKey);
+            }else{
+                window.detachEvent("mousedown", ctFunctionFirstKey);
+                window.detachEvent("keydown", ctFunctionFirstKey);
+            }
+        }
+        
+        //Writing first key press timestamp
+        var ctFunctionFirstKey = function output(event){
+            var KeyTimestamp = Math.floor(new Date().getTime()/1000);
+            ctSetCookie("ct_fkp_timestamp", KeyTimestamp);
+            ctKeyStopStopListening();
+        }
 
-document.getElementById(ct_input_name).value = document.getElementById(ct_input_name).value.replace(ct_input_value, ct_input_challenge);
-
-if (document.getElementById(ct_input_name).value == ct_input_value) {
-    document.getElementById(ct_input_name).value = ct_set_challenge(ct_input_challenge); 
-}
-
-function ct_set_challenge(val) {
-    return val; 
-}; 
-
-// ]]>
-</script>
-';
-        $html = sprintf( $html, $field_id, $wgCTHiddenFieldName, $wgCTHiddenFieldDefault, $field_id, $ct_checkjs_key );
+        if(typeof window.addEventListener == "function"){
+            window.addEventListener("mousemove", ctFunctionMouseMove);
+            window.addEventListener("mousedown", ctFunctionFirstKey);
+            window.addEventListener("keydown", ctFunctionFirstKey);
+        }else{
+            window.attachEvent("onmousemove", ctFunctionMouseMove);
+            window.attachEvent("mousedown", ctFunctionFirstKey);
+            window.attachEvent("keydown", ctFunctionFirstKey);
+        }</script>';
         
         $html .= '<noscript><p><b>Please enable JavaScript to pass antispam protection!</b><br />Here are the instructions how to enable JavaScript in your web browser <a href="http://www.enable-javascript.com" rel="nofollow" target="_blank">http://www.enable-javascript.com</a>.<br />' . $wgCTExtName . '.</p></noscript>';
 

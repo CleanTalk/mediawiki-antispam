@@ -39,22 +39,12 @@ $wgCTServerURL = 'http://moderate.cleantalk.org/api2.0';
 /**
  * Extension agent name and version 
  */
-$wgCTAgent = 'mediawiki-19';
+$wgCTAgent = 'mediawiki-20';
 
 /**
  * Extension name 
  */
 $wgCTExtName = 'Antispam by CleanTalk';
-
-/**
- * Field name for JavaScript test 
- */
-$wgCTHiddenFieldName = 'ct_checkjs';
-
-/**
- * Default value for hidden field 
- */
-$wgCTHiddenFieldDefault = 0;
 
 /**
  * Admin notificaction account ID 
@@ -102,19 +92,16 @@ $wgExtensionCredits['antispam'][] = array(
 	'author' => 'Denis Shagimuratov',
 	'url' => 'https://www.mediawiki.org/wiki/Extension:Antispam',
 	'descriptionmsg' => 'cleantalk-desc',
-	'version' => '1.7',
+	'version' => '2.0',
 );
 
 $wgAutoloadClasses['CTBody'] = __DIR__ . '/Antispam.body.php';
 $wgAutoloadClasses['CTHooks'] = __DIR__ . '/Antispam.hooks.php';
 
 $wgHooks['AbortNewAccount'][] = 'CTHooks::onAbortNewAccount';
-$wgHooks['UserCreateForm'][] = 'CTHooks::onUserCreateForm';
 
 $wgHooks['EditFilter'][] = 'CTHooks::onEditFilter';
-$wgHooks['EditPage::showEditForm:initial'][] = 'CTHooks::onShowEditForm';
 
-$wgHooks['UploadForm:initial'][] = 'CTHooks::onShowUploadForm';
 $wgHooks['UploadVerifyFile'][] = 'CTHooks::onUploadFilter';
 
 // Skip edit test for Administrators

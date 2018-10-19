@@ -3,43 +3,6 @@
 class CTHooks {
 
     /**
-     * Some HTML&JS code for JavaScript test 
-     * @param UploadForm $editPage
-     * @return bool
-     */
-    public static function onShowUploadForm( $editPage ) {
-
-        $editPage->uploadFormTextTop = CTBody::AddJSCode();
-        CTBody::ctSetCookie();
-        
-        return true;
-    }
-    /**
-     * Some HTML&JS code for JavaScript test 
-     * @param HTMLForm $form
-     * @return bool
-     */
-    public static function onShowEditForm( $editPage ) {
-
-        $editPage->editFormTextBottom = CTBody::AddJSCode();
-        CTBody::ctSetCookie();
-        
-        return true;
-    }
-    /**
-     * Some HTML&JS code for JavaScript test 
-     * @param HTMLForm $form
-     * @return bool
-     */
-    public static function onUserCreateForm( &$template ) {
-        
-        $template->set( 'header', CTBody::AddJSCode());
-        CTBody::ctSetCookie();
-        
-        return true;
-    }
-    
-    /**
      * Upload spam test 
      * UploadBase $upload
      * string $mime
@@ -224,7 +187,10 @@ class CTHooks {
     public static function onSkinAfterBottomScripts( $skin, &$text )
     {
         global $wgCTShowLink, $wgCTSFW, $wgCTDataStoreFile, $wgCTAccessKey;
-        
+
+        $text. = CTBody::AddJSCode();
+        CTBody::ctSetCookie();      
+
         /* SFW starts */
         
         if($wgCTSFW && file_exists($wgCTDataStoreFile))
