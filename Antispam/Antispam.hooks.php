@@ -188,7 +188,7 @@ class CTHooks {
     {
         global $wgCTShowLink, $wgCTSFW, $wgCTDataStoreFile, $wgCTAccessKey;
 
-        $text. = CTBody::AddJSCode();
+        $text .= CTBody::AddJSCode();
         CTBody::ctSetCookie();      
 
         /* SFW starts */
