@@ -148,7 +148,7 @@ class CTBody {
         global $wgCTExtName;
         
         $html = '<script>
-        var ct_checkjs_val = '.self::getJSChallenge().',
+        var ct_checkjs_val = \''.self::getJSChallenge().'\',
             d = new Date() 
             ctTimeMs = new Date().getTime(),
             ctMouseEventTimerFlag = true, //Reading interval flag
