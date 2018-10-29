@@ -243,33 +243,37 @@ class CTBody {
         
         if ( file_exists($wgCTDataStoreFile) ) {
             $settings = file_get_contents ( $wgCTDataStoreFile );
-            if ( $settings ) {
+            if ( $settings ) 
+            {
                 $settings = json_decode($settings, true);
+                if (!isset($settings['lastAdminNotificaionSent']))
+                {
+                    $fp = fopen( $wgCTDataStoreFile, 'w' ) or error_log( 'Could not open file:' . $wgCTDataStoreFile );
+                    $settings['lastAdminNotificaionSent'] = time();
+                    fwrite( $fp, json_encode($settings) );
+                    fclose( $fp );            
+                }
+                // Skip notification if permitted interval doesn't exhaust
+                if ( isset( $settings['lastAdminNotificaionSent'] ) && time() - $settings['lastAdminNotificaionSent'] < $wgCTAdminNotificaionInteval ) {
+                    return false; 
+                }
+                
+                $u = User::newFromId( $wgCTAdminAccountId );
+                 
+                $status = $u->sendMail( $title , $body );
+
+                if ( $status->ok ) {
+                    $fp = fopen( $wgCTDataStoreFile, 'w' ) or error_log( 'Could not open file:' . $wgCTDataStoreFile );
+                    $settings['lastAdminNotificaionSent'] = time();
+                    fwrite( $fp, json_encode($settings) );
+                    fclose( $fp );   
+                } 
+                return $status->ok;                               
             }
         }
-        if (!isset($settings['lastAdminNotificaionSent']))
-        {
-            $settings['lastAdminNotificaionSent'] = time();
-            fwrite( $fp, json_encode($settings) );
-            fclose( $fp );            
-        }
-        // Skip notification if permitted interval doesn't exhaust
-        if ( isset( $settings['lastAdminNotificaionSent'] ) && time() - $settings['lastAdminNotificaionSent'] < $wgCTAdminNotificaionInteval ) {
-            return false; 
-        }
-        
-        $u = User::newFromId( $wgCTAdminAccountId );
-         
-        $status = $u->sendMail( $title , $body );
 
-        if ( $status->ok ) {
-            $fp = fopen( $wgCTDataStoreFile, 'w' ) or error_log( 'Could not open file:' . $wgCTDataStoreFile );
-            $settings['lastAdminNotificaionSent'] = time();
-            fwrite( $fp, json_encode($settings) );
-            fclose( $fp );   
-        }
+        return false;
 
-        return $status->ok;
     }
 }
 

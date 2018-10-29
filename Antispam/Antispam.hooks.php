@@ -10,7 +10,7 @@ class CTHooks {
      * @return none
      */
     public static function onUploadFilter ( $upload, $mime, &$error ) {
-        global $wgCTAccessKey, $wgCTServerURL, $wgRequest, $wgCTAgent, $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount, $wgUser;
+        global $wgRequest, $wgCTExtName, $wgCTMinEditCount, $wgUser;
         
         # Skip spam check if error exists already
         if ($error !== TRUE) {
@@ -73,7 +73,7 @@ class CTHooks {
      * @return bool
      */
     public static function onEditFilter (  $editor, $text, $section, &$error, $summary ) {
-        global $wgCTAccessKey, $wgCTServerURL, $wgRequest, $wgCTAgent, $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount;
+        global $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount;
         
         $allowEdit = true;
 
@@ -146,7 +146,7 @@ class CTHooks {
      * @return bool
      */
     public static function onAbortNewAccount ( $user, &$message ) {
-        global $wgCTAccessKey, $wgCTServerURL, $wgRequest, $wgCTAgent, $wgCTExtName;
+        global $wgCTExtName;
         
         $allowAccount = true;
 
