@@ -183,7 +183,47 @@ class CTHooks {
 
         return $allowAccount;
     }
-    
+public static function onTitleMove( Title $title, Title $newtitle, User $user )
+{
+    global $wgUser, $wgCTExtName;
+
+    // Skip antispam test if user is member of special group
+    if ( $wgUser->isAllowed('cleantalk-bypass') ) {
+        return;
+    }
+    $errors = [];
+    // Check
+    $ctResult = CTBody::onSpamCheck(
+        'check_message', array(
+            'message' => $newtitle->mUrlform ,
+            'sender_email' => $wgUser->mEmail,
+            'sender_nickname' => $wgUser->mName,
+        )
+    );
+    if ( $ctResult->errno != 0 ) {
+        if(CTBody::JSTest() != 1)
+        {
+            $ctResult->allow = 0;
+            $ctResult->comment = "Forbidden. Please, enable Javascript.";
+        }
+        else
+        {
+            $ctResult->allow = 1;
+        }
+    }
+
+    // Disallow edit with CleanTalk comment 
+    if ($ctResult->allow == 0) {
+        $errors[] = $ctResult->comment;
+    }
+   
+    if ($ctResult->inactive === 1) {
+        CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
+    }  
+
+    if (count($errors))
+        throw new PermissionsError( 'move', $errors  );
+}     
     public static function onSkinAfterBottomScripts( $skin, &$text )
     {
         global $wgCTShowLink, $wgCTSFW, $wgCTDataStoreFile, $wgCTAccessKey;
