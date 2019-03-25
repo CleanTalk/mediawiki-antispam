@@ -104,8 +104,14 @@ $wgHooks['EditFilter'][] = 'CTHooks::onEditFilter';
 
 $wgHooks['UploadVerifyFile'][] = 'CTHooks::onUploadFilter';
 
-// Skip edit test for Administrators
+// Skip test for Administrators
 $wgGroupPermissions['sysop']['cleantalk-bypass'] = true;
+
+// Skip test for registered
+$wgGroupPermissions['user']['cleantalk-bypass'] = false;
+
+// Skip test for autoconfirmed users
+$wgGroupPermissions['autoconfirmed']['cleantalk-bypass'] = false;
 
 $wgHooks["SkinAfterBottomScripts"][] = "CTHooks::onSkinAfterBottomScripts";
 $wgHooks['TitleMove'][] = 'CTHooks::onTitleMove';

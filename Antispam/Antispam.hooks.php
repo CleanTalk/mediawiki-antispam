@@ -73,7 +73,7 @@ class CTHooks {
      * @return bool
      */
     public static function onEditFilter (  $editor, $text, $section, &$error, $summary ) {
-        global $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount;
+        global $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount, $wgUser;
         
         $allowEdit = true;
 
@@ -84,6 +84,11 @@ class CTHooks {
         
         // Skip antispam test of not new edit if flag is set
         if ( $wgCTNewEditsOnly && !$editor->isNew) {
+            return $allowEdit;
+        }
+
+        // Skip antispam test if user is member of special group
+        if ( $wgUser->isAllowed('cleantalk-bypass') ) {
             return $allowEdit;
         }
 
