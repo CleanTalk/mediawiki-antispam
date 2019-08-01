@@ -19,7 +19,7 @@ class CTAuth extends AbstractPreAuthenticationProvider {
 		);
 
 		// Use this to debug the response
-		return Status::newFatal( $ctResult->comment  );
+		//return Status::newFatal( $ctResult->comment  );
 
 		// Allow account if we have any API errors
 		if ( $ctResult->errno != 0 )
