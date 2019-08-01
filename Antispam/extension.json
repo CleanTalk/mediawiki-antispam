@@ -1,0 +1,80 @@
+{
+	"name": "Antispam by CleanTalk",
+	"version": "2.2",
+	"author": "CleanTalk Developers Team",
+	"url": "https://www.mediawiki.org/wiki/Extension:Antispam",
+	"descriptionmsg": "cleantalk-desc",
+	"type": "antispam",
+	"requires": {
+		"MediaWiki": ">= 1.29.0"
+	},
+	"GroupPermissions": {
+		"sysop": {
+			"cleantalk-bypass": true
+		}
+	},
+	"AutoloadClasses": {
+		"Cleantalk"         : "Cleantalk.php",
+		"CleantalkRequest"  : "CleantalkRequest.php",
+		"CleantalkResponse" : "CleantalkResponse.php",
+		"CleantalkHelper"   : "CleantalkHelper.php",
+		"CleantalkSFW"      : "CleantalkSFW.php",
+		"CTBody"            : "Antispam.body.php",
+		"CTHooks"           : "Antispam.hooks.php",
+		"CTAuth"            : "Antispam.auth.php"
+	},
+	"Hooks": {
+		"AbortNewAccount"   : "CTHooks::onAbortNewAccount",
+		"EditFilter"        : "CTHooks::onEditFilter",
+		"UploadVerifyFile"  : "CTHooks::onUploadFilter",
+		"SkinAfterBottomScripts": "CTHooks::onSkinAfterBottomScripts",
+		"TitleMove"         : "CTHooks::onTitleMove"
+	},
+	"AuthManagerAutoConfig": {
+		"preauth": {
+			"CTAuth":{
+				"class": "CTAuth"
+			}
+		}
+	},
+	"config": {
+		"CTAccessKey": {
+			"value": "e6ypara8y6um"
+		},
+		"CTCheckNoConnect": {
+			"value": true
+		},
+		"CTServerURL": {
+			"value": "http://moderate.cleantalk.org/api2.0"
+		},
+		"CTAgent": {
+			"value": "mediawiki-22"
+		},
+		"CTExtName": {
+			"value": "Antispam by CleanTalk"
+		},
+		"CTAdminAccountId": {
+			"value": 1
+		},
+		"CTAdminNotificaionInteval": {
+			"value": 10800
+		},
+		"CTShowLink": {
+			"value": true
+		},
+		"CTSFW": {
+			"value": false
+		},
+		"CTNewEditsOnly": {
+			"value": false
+		},
+		"CTMinEditCount": {
+			"value": 10
+		},
+		"CTDataStoreFile": {
+			"value": "Antispam.store.dat",
+			"path" : true
+		}
+	},
+	"manifest_version": 2
+}
