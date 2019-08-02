@@ -311,7 +311,7 @@ class Cleantalk
             
             // Disabling CA cert verivication
             // Disabling common name verification
-            if ($this->ssl_on && $this->ssl_path=='') {
+            /*if ($this->ssl_on && $this->ssl_path=='') {
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
             }
@@ -319,7 +319,7 @@ class Cleantalk
             	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
                 curl_setopt($ch, CURLOPT_CAINFO, $this->ssl_path);
-            }
+            }*/
 
             $result = curl_exec($ch);
             if (!$result) {
