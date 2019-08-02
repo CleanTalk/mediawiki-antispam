@@ -22,7 +22,7 @@ require_once('CleantalkSFW.php' );
  * Access key for cleantalk.org
  * @see https://clenatalk.org/register
  */
-$wgCTAccessKey = 'e6ypara8y6um';
+$wgCTAccessKey = '';
 
 /**
  * Check registrations, when there is errors with connection to service
