@@ -241,7 +241,7 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
         if($wgCTSFW && file_exists($wgCTDataStoreFile))
         {
             $settings = file_get_contents($wgCTDataStoreFile);
-            $sfw = new CleanTalkSFW();
+            $sfw = new CleantalkSFW();
 
             if ($settings)
             {
