@@ -53,6 +53,11 @@ class CleantalkSFW extends CleantalkHelper
 			$this->db_result_data[] = $row;
 		}
 	}
+
+	public function get_db_result_data()
+    {
+	    return $this->db_result_data;
+    }
 	
 	
 	/*

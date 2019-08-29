@@ -48,7 +48,7 @@
 			"value": "http://moderate.cleantalk.org/api2.0"
 		},
 		"CTAgent": {
-			"value": "mediawiki-22"
+			"value": "mediawiki-23"
 		},
 		"CTExtName": {
 			"value": "Antispam by CleanTalk"
@@ -70,10 +70,6 @@
 		},
 		"CTMinEditCount": {
 			"value": 10
-		},
-		"CTDataStoreFile": {
-			"value": "Antispam.store.dat",
-			"path" : true
 		}
 	},
 	"manifest_version": 2

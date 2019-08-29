@@ -231,35 +231,43 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
 }     
     public static function onSkinAfterBottomScripts( $skin, &$text )
     {
-        global $wgCTShowLink, $wgCTSFW, $wgCTDataStoreFile, $wgCTAccessKey;
+        global $wgCTShowLink, $wgCTSFW, $wgCTAccessKey;
 
         $text .= CTBody::AddJSCode();
         CTBody::ctSetCookie();      
 
         /* SFW starts */
         
-        if($wgCTSFW && file_exists($wgCTDataStoreFile))
+        if($wgCTSFW)
         {
-            $settings = file_get_contents($wgCTDataStoreFile);
+            CTBody::createSFWTables();
+
             $sfw = new CleantalkSFW();
 
-            if ($settings)
+            $settings = CTBody::ctGetSettings( $sfw );
+
+            if (isset($settings))
             {
-                $settings = json_decode($settings, true);
-                CTBody::createSFWTables();
+
+                $settings_changed = false;
+
                 if(!isset($settings['lastSFWUpdate']) || ($settings['lastSFWUpdate'] && (time()-$settings['lastSFWUpdate'] > 86400)))
                 {                   
                     $sfw->sfw_update($wgCTAccessKey);
-                    $settings['lastSFWUpdate'] = time();                                       
+                    $settings['lastSFWUpdate'] = time();
+                    $settings_changed = true;
                 }
                 if (!isset($settings['lastSFWSendLogs']) || $settings['lastSFWSendLogs'] && (time() - $settings['lastSFWSendLogs'] > 3600))
                 {
                     $sfw->send_logs($wgCTAccessKey); 
-                    $settings['lastSFWSendLogs'] = time();                                        
+                    $settings['lastSFWSendLogs'] = time();
+                    $settings_changed = true;
                 }
-                $fp = fopen( $wgCTDataStoreFile, 'w' ) or error_log( 'Could not open file:' . $wgCTDataStoreFile );
-                fwrite( $fp, json_encode($settings) );
-                fclose( $fp );              
+
+                if( $settings_changed ) {
+                    CTBody::ctWriteSettings( $sfw, $settings );
+                }
+
                 /* Check IP here */
                 
                 $is_sfw_check = true;

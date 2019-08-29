@@ -82,9 +82,12 @@ $wgCTNewEditsOnly = false;
 $wgCTMinEditCount = 10;
 
 /**
- * Extension settings store file 
+ * Extension settings store file
+ * @deprecated : Antispam Data stored on DB instead Antispam.store.dat file
  */
-$wgCTDataStoreFile = __DIR__ . '/Antispam.store.dat';
+if ( file_exists(__DIR__ . '/Antispam.store.dat') ) {
+    $wgCTDataStoreFile = __DIR__ . '/Antispam.store.dat';
+}
 
 $wgExtensionCredits['antispam'][] = array(
 	'path' => __FILE__,

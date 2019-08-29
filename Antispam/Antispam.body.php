@@ -89,7 +89,12 @@ class CTBody {
             `blocked_entries` int(11) NOT NULL,  
             `entries_timestamp` int(11) NOT NULL,   
             PRIMARY KEY `ip` (`ip`)
-            ) ENGINE=MyISAM;");        
+            ) ENGINE=MyISAM;");
+
+        $dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw_settings` (
+            `setting_name` varchar(128) NOT NULL,
+            `setting_value` int(24) NOT NULL
+            ) ENGINE = MyISAM;");
      
     } 
     public static function onSpamCheck($method, $params)
@@ -239,42 +244,82 @@ class CTBody {
      * @return bool 
      */
     public static function SendAdminEmail( $title, $body ) {
-        global $wgCTExtName, $wgCTAdminAccountId, $wgCTDataStoreFile, $wgCTAdminNotificaionInteval;
-        
-        if ( file_exists($wgCTDataStoreFile) ) {
-            $settings = file_get_contents ( $wgCTDataStoreFile );
-            if ( $settings ) 
-            {
-                $settings = json_decode($settings, true);
-                if (!isset($settings['lastAdminNotificaionSent']))
-                {
-                    $fp = fopen( $wgCTDataStoreFile, 'w' ) or error_log( 'Could not open file:' . $wgCTDataStoreFile );
-                    $settings['lastAdminNotificaionSent'] = time();
-                    fwrite( $fp, json_encode($settings) );
-                    fclose( $fp );            
-                }
-                // Skip notification if permitted interval doesn't exhaust
-                if ( isset( $settings['lastAdminNotificaionSent'] ) && time() - $settings['lastAdminNotificaionSent'] < $wgCTAdminNotificaionInteval ) {
-                    return false; 
-                }
-                
-                $u = User::newFromId( $wgCTAdminAccountId );
-                 
-                $status = $u->sendMail( $title , $body );
+        global $wgCTAdminAccountId, $wgCTAdminNotificaionInteval;
 
-                if ( $status->ok ) {
-                    $fp = fopen( $wgCTDataStoreFile, 'w' ) or error_log( 'Could not open file:' . $wgCTDataStoreFile );
-                    $settings['lastAdminNotificaionSent'] = time();
-                    fwrite( $fp, json_encode($settings) );
-                    fclose( $fp );   
-                } 
-                return $status->ok;                               
+        $sfw = new CleantalkSFW();
+        $settings = CTBody::ctGetSettings( $sfw );
+
+        if ( $settings )
+        {
+            if (!isset($settings['lastAdminNotificaionSent']))
+            {
+                $settings['lastAdminNotificaionSent'] = time();
+                CTBody::ctWriteSettings( $sfw, $settings );
             }
+            // Skip notification if permitted interval doesn't exhaust
+            if ( isset( $settings['lastAdminNotificaionSent'] ) && time() - $settings['lastAdminNotificaionSent'] < $wgCTAdminNotificaionInteval ) {
+                return false;
+            }
+
+            $u = User::newFromId( $wgCTAdminAccountId );
+
+            $status = $u->sendMail( $title , $body );
+
+            if ( $status->isGood() ) {
+                $settings['lastAdminNotificaionSent'] = time();
+                CTBody::ctWriteSettings( $sfw, $settings );
+            }
+            return $status->isGood();
         }
 
         return false;
 
     }
-}
 
-?>
+
+    /**
+     * Get settings from DB instead Antispam.store.dat file
+     *
+     * @param CleantalkSFW $sfw
+     * @return array|bool(false)
+     */
+    public static function ctGetSettings(CleantalkSFW $sfw )
+    {
+
+        $get_settings = 'SELECT * FROM `cleantalk_sfw_settings`';
+        $sfw->unversal_query( $get_settings, true );
+        $sfw->unversal_fetch_all();
+        $settings_from_db = $sfw->get_db_result_data();
+
+        $settings = array();
+        foreach( $settings_from_db as $key => $value ) {
+            $settings[$value['setting_name']] = $value['setting_value'];
+        }
+
+        return $settings;
+
+    }
+
+    /**
+     * Write settings to DB instead Antispam.store.dat file
+     *
+     * @param $settings
+     */
+    public static function ctWriteSettings( CleantalkSFW $sfw, $settings )
+    {
+        if( is_array($settings) && !empty($settings) ) {
+
+            foreach( $settings as $setting_name => $setting_value ) {
+                $delete_row = 'DELETE FROM `cleantalk_sfw_settings` WHERE `setting_name` = \'' . $setting_name . '\'';
+                $sfw->unversal_query( $delete_row, true );
+                $write_setting = 'INSERT INTO `cleantalk_sfw_settings` VALUES (\'' . $setting_name . '\', \'' . $setting_value . '\')';
+                $sfw->unversal_query( $write_setting, true );
+            }
+
+        } else {
+            return;
+        }
+        return;
+    }
+
+}
