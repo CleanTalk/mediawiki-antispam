@@ -31,9 +31,12 @@ class CTBody {
      * @return 
      */
     public static function ctSetCookie() {
+
         global $wgCTAccessKey;
         
-        
+        if( headers_sent() ) {
+            return;
+        }
         
         // Cookie names to validate
         $cookie_test_value = array(
@@ -43,14 +46,14 @@ class CTBody {
 
         // Pervious referer
         if(!empty($_SERVER['HTTP_REFERER'])){
-            setcookie('ct_prev_referer', $_SERVER['HTTP_REFERER'], 0, '/');
+            self::apbct_cookie__set( 'ct_prev_referer', $_SERVER['HTTP_REFERER'], 0, '/', $_SERVER['HTTP_HOST'], false, true, 'Lax' );
             $cookie_test_value['cookies_names'][] = 'ct_prev_referer';
             $cookie_test_value['check_value'] .= $_SERVER['HTTP_REFERER'];
         }
         
         // Cookies test
         $cookie_test_value['check_value'] = md5($cookie_test_value['check_value']);
-        setcookie('ct_cookies_test', json_encode($cookie_test_value), 0, '/');
+        self::apbct_cookie__set( 'ct_cookies_test', json_encode($cookie_test_value), 0, '/', $_SERVER['HTTP_HOST'], false, true, 'Lax' );
     }
     public static function ctTestCookie()
     {
@@ -320,6 +323,33 @@ class CTBody {
             return;
         }
         return;
+    }
+
+    public static function apbct_cookie__set($name, $value = '', $expires = 0, $path = '/', $domain = null, $secure = false, $httponly = false, $samesite = null ){
+
+        // For PHP 7.3+ and above
+        if( version_compare( phpversion(), '7.3.0', '>=' ) ){
+
+            $params = array(
+                'expires'  => $expires,
+                'path'     => $path,
+                'domain'   => $domain,
+                'secure'   => $secure,
+                'httponly' => $httponly,
+            );
+
+            if($samesite)
+                $params['samesite'] = $samesite;
+
+            setcookie( $name, $value, $params );
+
+        // For PHP 5.6 - 7.2
+        } else {
+
+            setcookie( $name, $value, $expires, $path, $domain, $secure, $httponly );
+
+        }
+
     }
 
 }

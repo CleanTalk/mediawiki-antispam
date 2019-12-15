@@ -278,9 +278,9 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
                     if(isset($_COOKIE['apbct_sfw_pass_key']) && $_COOKIE['apbct_sfw_pass_key'] == md5($value . $wgCTAccessKey))
                     {
                         $is_sfw_check=false;
-                        if(isset($_COOKIE['apbct_sfw_passed']))
+                        if( isset($_COOKIE['apbct_sfw_passed']) && ! headers_sent() )
                         {
-                            @setcookie ('apbct_sfw_passed'); //Deleting cookie
+                            CTBody::apbct_cookie__set( 'apbct_sfw_passed', '0', time()+86400*3, '/', $_SERVER['HTTP_HOST'], false, true, 'Lax' );
                             $sfw->sfw_update_logs($value, 'passed');
                         }
                     }
