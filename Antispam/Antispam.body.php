@@ -157,7 +157,7 @@ class CTBody {
         
         $html = '<script>
         var ct_checkjs_val = \''.self::getJSChallenge().'\',
-            d = new Date() 
+            d = new Date(),
             ctTimeMs = new Date().getTime(),
             ctMouseEventTimerFlag = true, //Reading interval flag
             ctMouseData = "[",
@@ -199,7 +199,7 @@ class CTBody {
         
         //Logging mouse position each 300 ms
         var ctFunctionMouseMove = function output(event){
-            if(ctMouseEventTimerFlag == true){
+            if(ctMouseEventTimerFlag === true){
                 var mouseDate = new Date();
                 ctMouseData += "[" + Math.round(event.pageY) + "," + Math.round(event.pageX) + "," + Math.round(mouseDate.getTime() - ctTimeMs) + "],";
                 ctMouseDataCounter++;
@@ -207,7 +207,7 @@ class CTBody {
                 if(ctMouseDataCounter >= 100)
                     ctMouseStopData();
             }
-        }
+        };
         
         //Stop key listening function
         function ctKeyStopStopListening(){
@@ -225,7 +225,7 @@ class CTBody {
             var KeyTimestamp = Math.floor(new Date().getTime()/1000);
             ctSetCookie("ct_fkp_timestamp", KeyTimestamp);
             ctKeyStopStopListening();
-        }
+        };
 
         if(typeof window.addEventListener == "function"){
             window.addEventListener("mousemove", ctFunctionMouseMove);
