@@ -82,6 +82,11 @@ $wgCTNewEditsOnly = false;
 $wgCTMinEditCount = 10;
 
 /**
+ * Wether the extension will send user's email to check it or no (can be disabled for privacy issues).
+ */
+$wgCTCheckEmail = true;
+
+/**
  * Extension settings store file
  * @deprecated : Antispam Data stored on DB instead Antispam.store.dat file
  */
