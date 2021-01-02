@@ -6,17 +6,18 @@ class CTAuth extends AbstractPreAuthenticationProvider {
 
 	public function testForAccountCreation( $user, $creator, array $reqs ) {
 
-		global $wgCTExtName;
+		global $wgCTExtName, $wgCTCheckEmail;
 
 		$allowAccount = true;
 
-		// Check
-		$ctResult = CTBody::onSpamCheck(
-			'check_newuser', array(
-				'sender_email' => $user->mEmail,
-				'sender_nickname' => $user->mName,
-			)
+		$paramsCheck = array(
+			'sender_nickname' => $user->mName,
 		);
+		if( $wgCTCheckEmail )
+			$paramsCheck['sender_email'] = $user->mEmail;
+
+        	// Check
+		$ctResult = CTBody::onSpamCheck( 'check_newuser', $paramsCheck );
 
 		// Allow account if we have any API errors
 		if ( $ctResult->errno != 0 )
