@@ -10,13 +10,13 @@ class CTHooks {
      * @return none
      */
     public static function onUploadFilter ( $upload, $mime, &$error ) {
-        global $wgRequest, $wgCTExtName, $wgCTMinEditCount, $wgUser;
-        
+        global $wgRequest, $wgCTExtName, $wgCTMinEditCount, $wgUser, $wgCTCheckEmail;
+
         # Skip spam check if error exists already
         if ($error !== TRUE) {
             return;
         }
-        
+
         $allowUpload = true;
 
         // Skip antispam test if user is member of special group
@@ -30,14 +30,16 @@ class CTHooks {
             return;
         }
 
-        // Check
-        $ctResult = CTBody::onSpamCheck(
-            'check_message', array(
-                'message' => $wgRequest->getVal('wpUploadDescription'),
-                'sender_email' => $wgUser->mEmail,
-                'sender_nickname' => $wgUser->mName,
-            )
+        $paramsCheck = array(
+            'message' => $wgRequest->getVal('wpUploadDescription'),
+            'sender_nickname' => $wgUser->mName
         );
+        if( $wgCTCheckEmail )
+            $paramsCheck['sender_email'] = $wgUser->mEmail;
+
+        // Check
+        $ctResult = CTBody::onSpamCheck( 'check_message', $paramsCheck );
+
         if ( $ctResult->errno != 0 ) {
             if(CTBody::JSTest() != 1)
             {
@@ -60,28 +62,28 @@ class CTHooks {
             // Fill $error parameter as array with error text
             $error = array($errorText);
         }
-       
+
         if ($ctResult->inactive === 1) {
             CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
         }
 
         return;
     }
-    
+
     /**
      * Edit spam test 
      * @return bool
      */
     public static function onEditFilter (  $editor, $text, $section, &$error, $summary ) {
-        global $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount, $wgUser;
-        
+        global $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount, $wgUser, $wgCTCheckEmail;
+
         $allowEdit = true;
 
         // Skip antispam test if editor member of special group
         if ( $editor->getArticle()->getContext()->getUser()->isAllowed('cleantalk-bypass') ) {
             return $allowEdit;
         }
-        
+
         // Skip antispam test of not new edit if flag is set
         if ( $wgCTNewEditsOnly && !$editor->isNew) {
             return $allowEdit;
@@ -98,14 +100,15 @@ class CTHooks {
             return $allowEdit;
         }
 
-        // Check
-        $ctResult = CTBody::onSpamCheck(
-            'check_message', array(
-                'message' => $editor->getTitle()->getText() . "\n \n" . $summary . "\n \n" . $text,
-                'sender_email' => $editor->getArticle()->getContext()->getUser()->mEmail,
-                'sender_nickname' => $editor->getArticle()->getContext()->getUser()->mName,
-            )
+        $paramsCheck = array(
+            'message' => $editor->getTitle()->getText() . "\n \n" . $summary . "\n \n" . $text,
+            'sender_nickname' => $editor->getArticle()->getContext()->getUser()->mName
         );
+        if( $wgCTCheckEmail )
+            $paramsCheck['sender_email'] = $editor->getArticle()->getContext()->getUser()->mEmail;
+
+        // Check
+        $ctResult = CTBody::onSpamCheck( 'check_message', $paramsCheck );
 
         // Allow edit if we have any API errors
         /*if ( $ctResult->errno != 0 ) {
@@ -129,39 +132,41 @@ class CTHooks {
         // Disallow edit with CleanTalk comment 
         if (!$allowEdit || $ctResult->allow == 0) {
             $error = $ctResult->comment;
-            
+
             // Converting links to wikitext format
             $error = preg_replace("(<a\shref=\"([^\s]+)\".+>([a-f0-9]+)</a>)", "[$1 $2]", $error);
-            
+
             $error = Html::openElement( 'div', array( 'class' => 'errorbox' ) ) .
                $error . 
                Html::closeElement( 'div' ) . "\n" .
                Html::element( 'br', array( 'clear' => 'all' ) ) . "\n";
         }
-       
+
         if ($ctResult->inactive === 1) {
             CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
         }
 
         return $allowEdit;
     }
-    
+
     /**
      * Account spam test 
      * @return bool
      */
     public static function onAbortNewAccount ( $user, &$message ) {
-        global $wgCTExtName;
-        
+        global $wgCTExtName, $wgCTCheckEmail;
+
         $allowAccount = true;
 
-        // Check
-        $ctResult = CTBody::onSpamCheck(
-            'check_newuser', array(
-                'sender_email' => $user->mEmail,
-                'sender_nickname' => $user->mName,
-            )
+        $paramsCheck = array(
+            'sender_nickname' => $user->mName,
         );
+        if( $wgCTCheckEmail )
+            $paramsCheck['sender_email'] = $user->mEmail;
+
+        // Check
+        $ctResult = CTBody::onSpamCheck( 'check_newuser', $paramsCheck );
+
         // Allow account if we have any API errors
         if ( $ctResult->errno != 0 ) 
         {
@@ -181,54 +186,56 @@ class CTHooks {
             $allowAccount = false;
             $message = $ctResult->comment;
         }
-        
+
         if ($ctResult->inactive === 1) {
             CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
         }
 
         return $allowAccount;
     }
-public static function onTitleMove( Title $title, Title $newtitle, User $user )
-{
-    global $wgUser, $wgCTExtName;
+    public static function onTitleMove( Title $title, Title $newtitle, User $user ) {
+        global $wgUser, $wgCTExtName, $wgCTCheckEmail;
 
-    // Skip antispam test if user is member of special group
-    if ( $wgUser->isAllowed('cleantalk-bypass') ) {
-        return;
-    }
-    $errors = [];
-    // Check
-    $ctResult = CTBody::onSpamCheck(
-        'check_message', array(
+        // Skip antispam test if user is member of special group
+        if ( $wgUser->isAllowed('cleantalk-bypass') ) {
+            return;
+        }
+        $errors = [];
+
+        $paramsCheck = array(
             'message' => $newtitle->mUrlform ,
-            'sender_email' => $wgUser->mEmail,
             'sender_nickname' => $wgUser->mName,
-        )
-    );
-    if ( $ctResult->errno != 0 ) {
-        if(CTBody::JSTest() != 1)
-        {
-            $ctResult->allow = 0;
-            $ctResult->comment = "Forbidden. Please, enable Javascript.";
-        }
-        else
-        {
-            $ctResult->allow = 1;
-        }
-    }
+        );
+        if( $wgCTCheckEmail )
+            $paramsCheck['sender_email'] = $wgUser->mEmail;
 
-    // Disallow edit with CleanTalk comment 
-    if ($ctResult->allow == 0) {
-        $errors[] = $ctResult->comment;
-    }
-   
-    if ($ctResult->inactive === 1) {
-        CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
-    }  
+        // Check
+        $ctResult = CTBody::onSpamCheck( 'check_message', $paramsCheck );
 
-    if (count($errors))
-        throw new PermissionsError( 'move', $errors  );
-}     
+        if ( $ctResult->errno != 0 ) {
+            if(CTBody::JSTest() != 1)
+            {
+                $ctResult->allow = 0;
+                $ctResult->comment = "Forbidden. Please, enable Javascript.";
+            }
+            else
+            {
+                $ctResult->allow = 1;
+            }
+        }
+
+        // Disallow edit with CleanTalk comment 
+        if ($ctResult->allow == 0) {
+            $errors[] = $ctResult->comment;
+        }
+
+        if ($ctResult->inactive === 1) {
+            CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
+        }  
+
+        if (count($errors))
+            throw new PermissionsError( 'move', $errors  );
+    }     
     public static function onSkinAfterBottomScripts( $skin, &$text )
     {
         global $wgCTShowLink, $wgCTSFW, $wgCTAccessKey;
@@ -237,7 +244,7 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
         CTBody::ctSetCookie();      
 
         /* SFW starts */
-        
+
         if($wgCTSFW)
         {
             CTBody::createSFWTables();
@@ -269,7 +276,7 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
                 }
 
                 /* Check IP here */
-                
+
                 $is_sfw_check = true;
                 $sfw->ip_array = (array)CleantalkSFW::ip_get(array('real'), true);  
 
@@ -298,9 +305,9 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
                 /* Finish checking IP */
             }
         }
-        
+
         /* SFW ends */
-        
+
         if($wgCTShowLink)
         {
             $text.="<div style='width:100%;text-align:center;'><a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.</div>";
