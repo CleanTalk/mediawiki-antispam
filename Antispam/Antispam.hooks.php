@@ -234,11 +234,14 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
         global $wgCTShowLink, $wgCTSFW, $wgCTAccessKey;
 
         $text .= CTBody::AddJSCode();
-        CTBody::ctSetCookie();      
+        CTBody::ctSetCookie();
+
+        $dbr = wfGetDB(DB_MASTER);
+
 
         /* SFW starts */
         
-        if($wgCTSFW)
+        if($wgCTSFW && !$dbr->isReadOnly())
         {
             CTBody::createSFWTables();
 
