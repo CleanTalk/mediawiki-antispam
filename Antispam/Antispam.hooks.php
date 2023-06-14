@@ -10,7 +10,8 @@ class CTHooks {
      * @return none
      */
     public static function onUploadFilter ( $upload, $mime, &$error ) {
-        global $wgRequest, $wgCTExtName, $wgCTMinEditCount, $wgUser;
+        global $wgRequest, $wgCTExtName, $wgCTMinEditCount;
+        $user = RequestContext::getMain()->getUser();
         
         # Skip spam check if error exists already
         if ($error !== TRUE) {
@@ -20,12 +21,12 @@ class CTHooks {
         $allowUpload = true;
 
         // Skip antispam test if user is member of special group
-        if ( $wgUser->isAllowed('cleantalk-bypass') ) {
+        if ( $user->isAllowed('cleantalk-bypass') ) {
             return;
         }
 
         // Skip antispam test for user with getEditCount() more than setted value
-        $edit_count = $wgUser->getEditCount();
+        $edit_count = $user->getEditCount();
         if ( isset($edit_count) && $edit_count > $wgCTMinEditCount ) {
             return;
         }
@@ -34,8 +35,8 @@ class CTHooks {
         $ctResult = CTBody::onSpamCheck(
             'check_message', array(
                 'message' => $wgRequest->getVal('wpUploadDescription'),
-                'sender_email' => $wgUser->mEmail,
-                'sender_nickname' => $wgUser->mName,
+                'sender_email' => $user->mEmail,
+                'sender_nickname' => $user->mName,
             )
         );
         if ( $ctResult->errno != 0 ) {
@@ -73,7 +74,8 @@ class CTHooks {
      * @return bool
      */
     public static function onEditFilter (  $editor, $text, $section, &$error, $summary ) {
-        global $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount, $wgUser;
+        global $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount;
+        $user = $editor->getArticle()->getContext()->getUser();
         
         $allowEdit = true;
 
@@ -88,7 +90,7 @@ class CTHooks {
         }
 
         // Skip antispam test if user is member of special group
-        if ( $wgUser->isAllowed('cleantalk-bypass') ) {
+        if ( $user->isAllowed('cleantalk-bypass') ) {
             return $allowEdit;
         }
 
@@ -190,10 +192,10 @@ class CTHooks {
     }
 public static function onTitleMove( Title $title, Title $newtitle, User $user )
 {
-    global $wgUser, $wgCTExtName;
+    global $wgCTExtName;
 
     // Skip antispam test if user is member of special group
-    if ( $wgUser->isAllowed('cleantalk-bypass') ) {
+    if ( $user->isAllowed('cleantalk-bypass') ) {
         return;
     }
     $errors = [];
@@ -201,8 +203,8 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
     $ctResult = CTBody::onSpamCheck(
         'check_message', array(
             'message' => $newtitle->mUrlform ,
-            'sender_email' => $wgUser->mEmail,
-            'sender_nickname' => $wgUser->mName,
+            'sender_email' => $user->mEmail,
+            'sender_nickname' => $user->mName,
         )
     );
     if ( $ctResult->errno != 0 ) {
