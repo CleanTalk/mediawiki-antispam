@@ -25,6 +25,7 @@
 		"CTAuth"            : "Antispam.auth.php"
 	},
 	"Hooks": {
+		"AbortNewAccount"   : "CTHooks::onAbortNewAccount",
 		"EditFilter"        : "CTHooks::onEditFilter",
 		"UploadVerifyFile"  : "CTHooks::onUploadFilter",
 		"SkinAfterBottomScripts": "CTHooks::onSkinAfterBottomScripts",
@@ -70,7 +71,7 @@
 		},
 		"CTMinEditCount": {
 			"value": 10
-		}
+		},
 	},
 	"manifest_version": 2
 }
