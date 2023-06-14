@@ -53,6 +53,11 @@ class CleantalkSFW extends CleantalkHelper
 			$this->db_result_data[] = $row;
 		}
 	}
+
+	public function get_db_result_data()
+    {
+	    return $this->db_result_data;
+    }
 	
 	
 	/*
@@ -177,7 +182,11 @@ class CleantalkSFW extends CleantalkHelper
 			//Compile logs
 			$data = array();
 			foreach($this->db_result_data as $key => $value){
-				$data[] = array(trim($value['ip']), $value['all_entries'], $value['all_entries']-$value['blocked_entries'], $value['entries_timestamp']);
+			    $ip = isset($value['ip']) ? trim($value['ip']) : '';
+                $all_entries = isset($value['all_entries']) ? $value['all_entries'] : 0;
+                $blocked_entries_diff = isset($value['blocked_entries']) && isset($value['all_entries']) ? $value['all_entries'] - $value['blocked_entries'] : 0;
+                $entries_timestamp = isset($value['entries_timestamp']) ? $value['entries_timestamp'] : time();
+				$data[] = array($ip, $all_entries, $blocked_entries_diff, $entries_timestamp);
 			}
 			unset($key, $value);
 			

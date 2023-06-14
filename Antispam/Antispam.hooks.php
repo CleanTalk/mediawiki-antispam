@@ -73,7 +73,7 @@ class CTHooks {
      * @return bool
      */
     public static function onEditFilter (  $editor, $text, $section, &$error, $summary ) {
-        global $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount;
+        global $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount, $wgUser;
         
         $allowEdit = true;
 
@@ -84,6 +84,11 @@ class CTHooks {
         
         // Skip antispam test of not new edit if flag is set
         if ( $wgCTNewEditsOnly && !$editor->isNew) {
+            return $allowEdit;
+        }
+
+        // Skip antispam test if user is member of special group
+        if ( $wgUser->isAllowed('cleantalk-bypass') ) {
             return $allowEdit;
         }
 
@@ -226,35 +231,46 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
 }     
     public static function onSkinAfterBottomScripts( $skin, &$text )
     {
-        global $wgCTShowLink, $wgCTSFW, $wgCTDataStoreFile, $wgCTAccessKey;
+        global $wgCTShowLink, $wgCTSFW, $wgCTAccessKey;
 
         $text .= CTBody::AddJSCode();
-        CTBody::ctSetCookie();      
+        CTBody::ctSetCookie();
+
+        $dbr = wfGetDB(DB_MASTER);
+
 
         /* SFW starts */
         
-        if($wgCTSFW && file_exists($wgCTDataStoreFile))
+        if($wgCTSFW && !$dbr->isReadOnly())
         {
-            $settings = file_get_contents($wgCTDataStoreFile);
-            $sfw = new CleanTalkSFW();
+            CTBody::createSFWTables();
 
-            if ($settings)
+            $sfw = new CleantalkSFW();
+
+            $settings = CTBody::ctGetSettings( $sfw );
+
+            if (isset($settings))
             {
-                $settings = json_decode($settings, true);
-                CTBody::createSFWTables();
+
+                $settings_changed = false;
+
                 if(!isset($settings['lastSFWUpdate']) || ($settings['lastSFWUpdate'] && (time()-$settings['lastSFWUpdate'] > 86400)))
                 {                   
                     $sfw->sfw_update($wgCTAccessKey);
-                    $settings['lastSFWUpdate'] = time();                                       
+                    $settings['lastSFWUpdate'] = time();
+                    $settings_changed = true;
                 }
                 if (!isset($settings['lastSFWSendLogs']) || $settings['lastSFWSendLogs'] && (time() - $settings['lastSFWSendLogs'] > 3600))
                 {
                     $sfw->send_logs($wgCTAccessKey); 
-                    $settings['lastSFWSendLogs'] = time();                                        
+                    $settings['lastSFWSendLogs'] = time();
+                    $settings_changed = true;
                 }
-                $fp = fopen( $wgCTDataStoreFile, 'w' ) or error_log( 'Could not open file:' . $wgCTDataStoreFile );
-                fwrite( $fp, json_encode($settings) );
-                fclose( $fp );              
+
+                if( $settings_changed ) {
+                    CTBody::ctWriteSettings( $sfw, $settings );
+                }
+
                 /* Check IP here */
                 
                 $is_sfw_check = true;
@@ -265,9 +281,9 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
                     if(isset($_COOKIE['apbct_sfw_pass_key']) && $_COOKIE['apbct_sfw_pass_key'] == md5($value . $wgCTAccessKey))
                     {
                         $is_sfw_check=false;
-                        if(isset($_COOKIE['apbct_sfw_passed']))
+                        if( isset($_COOKIE['apbct_sfw_passed']) && ! headers_sent() )
                         {
-                            @setcookie ('apbct_sfw_passed'); //Deleting cookie
+                            CTBody::apbct_cookie__set( 'apbct_sfw_passed', '0', time()+86400*3, '/', $_SERVER['HTTP_HOST'], false, true, 'Lax' );
                             $sfw->sfw_update_logs($value, 'passed');
                         }
                     }

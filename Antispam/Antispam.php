@@ -39,7 +39,7 @@ $wgCTServerURL = 'http://moderate.cleantalk.org/api2.0';
 /**
  * Extension agent name and version 
  */
-$wgCTAgent = 'mediawiki-21';
+$wgCTAgent = 'mediawiki-23';
 
 /**
  * Extension name 
@@ -82,9 +82,12 @@ $wgCTNewEditsOnly = false;
 $wgCTMinEditCount = 10;
 
 /**
- * Extension settings store file 
+ * Extension settings store file
+ * @deprecated : Antispam Data stored on DB instead Antispam.store.dat file
  */
-$wgCTDataStoreFile = __DIR__ . '/Antispam.store.dat';
+if ( file_exists(__DIR__ . '/Antispam.store.dat') ) {
+    $wgCTDataStoreFile = __DIR__ . '/Antispam.store.dat';
+}
 
 $wgExtensionCredits['antispam'][] = array(
 	'path' => __FILE__,
@@ -92,7 +95,7 @@ $wgExtensionCredits['antispam'][] = array(
 	'author' => 'Denis Shagimuratov',
 	'url' => 'https://www.mediawiki.org/wiki/Extension:Antispam',
 	'descriptionmsg' => 'cleantalk-desc',
-	'version' => '2.1',
+	'version' => '2.3',
 );
 
 $wgAutoloadClasses['CTBody'] = __DIR__ . '/Antispam.body.php';
@@ -104,8 +107,14 @@ $wgHooks['EditFilter'][] = 'CTHooks::onEditFilter';
 
 $wgHooks['UploadVerifyFile'][] = 'CTHooks::onUploadFilter';
 
-// Skip edit test for Administrators
+// Skip test for Administrators
 $wgGroupPermissions['sysop']['cleantalk-bypass'] = true;
+
+// Skip test for registered
+$wgGroupPermissions['user']['cleantalk-bypass'] = false;
+
+// Skip test for autoconfirmed users
+$wgGroupPermissions['autoconfirmed']['cleantalk-bypass'] = false;
 
 $wgHooks["SkinAfterBottomScripts"][] = "CTHooks::onSkinAfterBottomScripts";
 $wgHooks['TitleMove'][] = 'CTHooks::onTitleMove';

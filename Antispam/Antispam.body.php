@@ -31,9 +31,12 @@ class CTBody {
      * @return 
      */
     public static function ctSetCookie() {
+
         global $wgCTAccessKey;
         
-        
+        if( headers_sent() ) {
+            return;
+        }
         
         // Cookie names to validate
         $cookie_test_value = array(
@@ -43,14 +46,14 @@ class CTBody {
 
         // Pervious referer
         if(!empty($_SERVER['HTTP_REFERER'])){
-            setcookie('ct_prev_referer', $_SERVER['HTTP_REFERER'], 0, '/');
+            self::apbct_cookie__set( 'ct_prev_referer', $_SERVER['HTTP_REFERER'], 0, '/', $_SERVER['HTTP_HOST'], false, true, 'Lax' );
             $cookie_test_value['cookies_names'][] = 'ct_prev_referer';
             $cookie_test_value['check_value'] .= $_SERVER['HTTP_REFERER'];
         }
         
         // Cookies test
         $cookie_test_value['check_value'] = md5($cookie_test_value['check_value']);
-        setcookie('ct_cookies_test', json_encode($cookie_test_value), 0, '/');
+        self::apbct_cookie__set( 'ct_cookies_test', json_encode($cookie_test_value), 0, '/', $_SERVER['HTTP_HOST'], false, true, 'Lax' );
     }
     public static function ctTestCookie()
     {
@@ -89,7 +92,12 @@ class CTBody {
             `blocked_entries` int(11) NOT NULL,  
             `entries_timestamp` int(11) NOT NULL,   
             PRIMARY KEY `ip` (`ip`)
-            ) ENGINE=MyISAM;");        
+            ) ENGINE=MyISAM;");
+
+        $dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw_settings` (
+            `setting_name` varchar(128) NOT NULL,
+            `setting_value` int(24) NOT NULL
+            ) ENGINE = MyISAM;");
      
     } 
     public static function onSpamCheck($method, $params)
@@ -149,14 +157,14 @@ class CTBody {
         
         $html = '<script>
         var ct_checkjs_val = \''.self::getJSChallenge().'\',
-            d = new Date() 
+            d = new Date(),
             ctTimeMs = new Date().getTime(),
             ctMouseEventTimerFlag = true, //Reading interval flag
             ctMouseData = "[",
             ctMouseDataCounter = 0;
         
         function ctSetCookie(c_name, value) {
-            document.cookie = c_name + "=" + encodeURIComponent(value) + "; path=/";
+            document.cookie = c_name + "=" + encodeURIComponent(value) + "; path=/; samesite=lax;";
         }
         
         ctSetCookie("ct_ps_timestamp", Math.floor(new Date().getTime()/1000));
@@ -191,7 +199,7 @@ class CTBody {
         
         //Logging mouse position each 300 ms
         var ctFunctionMouseMove = function output(event){
-            if(ctMouseEventTimerFlag == true){
+            if(ctMouseEventTimerFlag === true){
                 var mouseDate = new Date();
                 ctMouseData += "[" + Math.round(event.pageY) + "," + Math.round(event.pageX) + "," + Math.round(mouseDate.getTime() - ctTimeMs) + "],";
                 ctMouseDataCounter++;
@@ -199,7 +207,7 @@ class CTBody {
                 if(ctMouseDataCounter >= 100)
                     ctMouseStopData();
             }
-        }
+        };
         
         //Stop key listening function
         function ctKeyStopStopListening(){
@@ -217,7 +225,7 @@ class CTBody {
             var KeyTimestamp = Math.floor(new Date().getTime()/1000);
             ctSetCookie("ct_fkp_timestamp", KeyTimestamp);
             ctKeyStopStopListening();
-        }
+        };
 
         if(typeof window.addEventListener == "function"){
             window.addEventListener("mousemove", ctFunctionMouseMove);
@@ -239,42 +247,109 @@ class CTBody {
      * @return bool 
      */
     public static function SendAdminEmail( $title, $body ) {
-        global $wgCTExtName, $wgCTAdminAccountId, $wgCTDataStoreFile, $wgCTAdminNotificaionInteval;
-        
-        if ( file_exists($wgCTDataStoreFile) ) {
-            $settings = file_get_contents ( $wgCTDataStoreFile );
-            if ( $settings ) 
-            {
-                $settings = json_decode($settings, true);
-                if (!isset($settings['lastAdminNotificaionSent']))
-                {
-                    $fp = fopen( $wgCTDataStoreFile, 'w' ) or error_log( 'Could not open file:' . $wgCTDataStoreFile );
-                    $settings['lastAdminNotificaionSent'] = time();
-                    fwrite( $fp, json_encode($settings) );
-                    fclose( $fp );            
-                }
-                // Skip notification if permitted interval doesn't exhaust
-                if ( isset( $settings['lastAdminNotificaionSent'] ) && time() - $settings['lastAdminNotificaionSent'] < $wgCTAdminNotificaionInteval ) {
-                    return false; 
-                }
-                
-                $u = User::newFromId( $wgCTAdminAccountId );
-                 
-                $status = $u->sendMail( $title , $body );
+        global $wgCTAdminAccountId, $wgCTAdminNotificaionInteval;
 
-                if ( $status->ok ) {
-                    $fp = fopen( $wgCTDataStoreFile, 'w' ) or error_log( 'Could not open file:' . $wgCTDataStoreFile );
-                    $settings['lastAdminNotificaionSent'] = time();
-                    fwrite( $fp, json_encode($settings) );
-                    fclose( $fp );   
-                } 
-                return $status->ok;                               
+        $sfw = new CleantalkSFW();
+        $settings = CTBody::ctGetSettings( $sfw );
+
+        if ( $settings )
+        {
+            if (!isset($settings['lastAdminNotificaionSent']))
+            {
+                $settings['lastAdminNotificaionSent'] = time();
+                CTBody::ctWriteSettings( $sfw, $settings );
             }
+            // Skip notification if permitted interval doesn't exhaust
+            if ( isset( $settings['lastAdminNotificaionSent'] ) && time() - $settings['lastAdminNotificaionSent'] < $wgCTAdminNotificaionInteval ) {
+                return false;
+            }
+
+            $u = User::newFromId( $wgCTAdminAccountId );
+
+            $status = $u->sendMail( $title , $body );
+
+            if ( $status->isGood() ) {
+                $settings['lastAdminNotificaionSent'] = time();
+                CTBody::ctWriteSettings( $sfw, $settings );
+            }
+            return $status->isGood();
         }
 
         return false;
 
     }
-}
 
-?>
+
+    /**
+     * Get settings from DB instead Antispam.store.dat file
+     *
+     * @param CleantalkSFW $sfw
+     * @return array|bool(false)
+     */
+    public static function ctGetSettings(CleantalkSFW $sfw )
+    {
+
+        $get_settings = 'SELECT * FROM `cleantalk_sfw_settings`';
+        $sfw->unversal_query( $get_settings, true );
+        $sfw->unversal_fetch_all();
+        $settings_from_db = $sfw->get_db_result_data();
+
+        $settings = array();
+        foreach( $settings_from_db as $key => $value ) {
+            $settings[$value['setting_name']] = $value['setting_value'];
+        }
+
+        return $settings;
+
+    }
+
+    /**
+     * Write settings to DB instead Antispam.store.dat file
+     *
+     * @param $settings
+     */
+    public static function ctWriteSettings( CleantalkSFW $sfw, $settings )
+    {
+        if( is_array($settings) && !empty($settings) ) {
+
+            foreach( $settings as $setting_name => $setting_value ) {
+                $delete_row = 'DELETE FROM `cleantalk_sfw_settings` WHERE `setting_name` = \'' . $setting_name . '\'';
+                $sfw->unversal_query( $delete_row, true );
+                $write_setting = 'INSERT INTO `cleantalk_sfw_settings` VALUES (\'' . $setting_name . '\', \'' . $setting_value . '\')';
+                $sfw->unversal_query( $write_setting, true );
+            }
+
+        } else {
+            return;
+        }
+        return;
+    }
+
+    public static function apbct_cookie__set($name, $value = '', $expires = 0, $path = '/', $domain = null, $secure = false, $httponly = false, $samesite = null ){
+
+        // For PHP 7.3+ and above
+        if( version_compare( phpversion(), '7.3.0', '>=' ) ){
+
+            $params = array(
+                'expires'  => $expires,
+                'path'     => $path,
+                'domain'   => $domain,
+                'secure'   => $secure,
+                'httponly' => $httponly,
+            );
+
+            if($samesite)
+                $params['samesite'] = $samesite;
+
+            setcookie( $name, $value, $params );
+
+        // For PHP 5.6 - 7.2
+        } else {
+
+            setcookie( $name, $value, $expires, $path, $domain, $secure, $httponly );
+
+        }
+
+    }
+
+}

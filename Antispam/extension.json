@@ -1,9 +1,10 @@
 {
 	"name": "Antispam by CleanTalk",
-	"version": "2.2",
+	"version": "2.3",
 	"author": "CleanTalk Developers Team",
 	"url": "https://www.mediawiki.org/wiki/Extension:Antispam",
-	"descriptionmsg": "cleantalk-desc",
+	"description": "cleantalk.org is a cloud antispam service ",
+	"license-name": "GPL-2.0-or-later",
 	"type": "antispam",
 	"requires": {
 		"MediaWiki": ">= 1.29.0"
@@ -39,7 +40,7 @@
 	},
 	"config": {
 		"CTAccessKey": {
-			"value": "e6ypara8y6um"
+			"value": ""
 		},
 		"CTCheckNoConnect": {
 			"value": true
@@ -48,7 +49,7 @@
 			"value": "http://moderate.cleantalk.org/api2.0"
 		},
 		"CTAgent": {
-			"value": "mediawiki-22"
+			"value": "mediawiki-23"
 		},
 		"CTExtName": {
 			"value": "Antispam by CleanTalk"
@@ -71,10 +72,6 @@
 		"CTMinEditCount": {
 			"value": 10
 		},
-		"CTDataStoreFile": {
-			"value": "Antispam.store.dat",
-			"path" : true
-		}
 	},
 	"manifest_version": 2
 }
