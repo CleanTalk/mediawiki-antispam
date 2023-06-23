@@ -235,6 +235,12 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
     {
         global $wgCTShowLink, $wgCTSFW, $wgCTAccessKey;
 
+        $context = $skin->getContext();
+        $action = Action::getActionName( $context );
+        if ( $action === 'view' ) {
+            return;
+        }
+
         $text .= CTBody::AddJSCode();
         CTBody::ctSetCookie();      
 
