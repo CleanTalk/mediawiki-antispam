@@ -305,10 +305,10 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
         }
 
         /* SFW ends */
-        
-        if($wgCTShowLink)
+
+        if($wgCTShowLink && strpos($text, 'blocked by CleanTalk') === false)
         {
-            $text.="<div style='width:100%;text-align:center;'><a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.</div>";
+            $text.="<div style='width:100%;text-align:center;display: flow-root;'><a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.</div>";
         }
         return true;
     }
