@@ -3,6 +3,13 @@ mediawiki-antispam
 Version 2.3
 ================
 
-## Requirements
+**Requires:**
 
-* CleanTalk account https://cleantalk.org/register?product=anti-spam
+MediaWiki >= 1.29.0
+
+**Installation:**
+
+1.Download and place the file(s) in a directory called "Antispam" in your `extensions/` folder.
+2. Add the following code at the bottom of your LocalSettings.php:
+
+`wfLoadExtension( 'Antispam' );`
