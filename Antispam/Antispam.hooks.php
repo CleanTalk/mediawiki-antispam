@@ -3,7 +3,7 @@
 class CTHooks {
 
     /**
-     * Upload spam test 
+     * Upload spam test
      * UploadBase $upload
      * string $mime
      * bool|array $error
@@ -12,12 +12,12 @@ class CTHooks {
     public static function onUploadFilter ( $upload, $mime, &$error ) {
         global $wgRequest, $wgCTExtName, $wgCTMinEditCount;
         $user = RequestContext::getMain()->getUser();
-        
+
         # Skip spam check if error exists already
         if ($error !== TRUE) {
             return;
         }
-        
+
         $allowUpload = true;
 
         // Skip antispam test if user is member of special group
@@ -53,7 +53,7 @@ class CTHooks {
             }
         }
 
-        // Disallow edit with CleanTalk comment 
+        // Disallow edit with CleanTalk comment
         if (!$allowUpload || $ctResult->allow == 0) {
             // Converting links to wikitext format
             $errorText = preg_replace("(<a\shref=\"([^\s]+)\".+>([a-f0-9]+)</a>)", "[$1 $2]", $ctResult->comment);
@@ -61,29 +61,29 @@ class CTHooks {
             // Fill $error parameter as array with error text
             $error = array($errorText);
         }
-       
+
         if ($ctResult->inactive === 1) {
             CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
         }
 
         return;
     }
-    
+
     /**
-     * Edit spam test 
+     * Edit spam test
      * @return bool
      */
     public static function onEditFilter (  $editor, $text, $section, &$error, $summary ) {
         global $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount;
         $user = $editor->getArticle()->getContext()->getUser();
-        
+
         $allowEdit = true;
 
         // Skip antispam test if editor member of special group
         if ( $editor->getArticle()->getContext()->getUser()->isAllowed('cleantalk-bypass') ) {
             return $allowEdit;
         }
-        
+
         // Skip antispam test of not new edit if flag is set
         if ( $wgCTNewEditsOnly && !$editor->isNew) {
             return $allowEdit;
@@ -113,7 +113,7 @@ class CTHooks {
         /*if ( $ctResult->errno != 0 ) {
             return $allowEdit;
         }*/
-        if ( $ctResult->errno != 0 ) 
+        if ( $ctResult->errno != 0 )
         {
             if(CTBody::JSTest()!=1)
             {
@@ -128,33 +128,33 @@ class CTHooks {
             }
         }
 
-        // Disallow edit with CleanTalk comment 
+        // Disallow edit with CleanTalk comment
         if (!$allowEdit || $ctResult->allow == 0) {
             $error = $ctResult->comment;
-            
+
             // Converting links to wikitext format
             $error = preg_replace("(<a\shref=\"([^\s]+)\".+>([a-f0-9]+)</a>)", "[$1 $2]", $error);
-            
+
             $error = Html::openElement( 'div', array( 'class' => 'errorbox' ) ) .
-               $error . 
+               $error .
                Html::closeElement( 'div' ) . "\n" .
                Html::element( 'br', array( 'clear' => 'all' ) ) . "\n";
         }
-       
+
         if ($ctResult->inactive === 1) {
             CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
         }
 
         return $allowEdit;
     }
-    
+
     /**
-     * Account spam test 
+     * Account spam test
      * @return bool
      */
     public static function onAbortNewAccount ( $user, &$message ) {
         global $wgCTExtName;
-        
+
         $allowAccount = true;
 
         // Check
@@ -165,7 +165,7 @@ class CTHooks {
             )
         );
         // Allow account if we have any API errors
-        if ( $ctResult->errno != 0 ) 
+        if ( $ctResult->errno != 0 )
         {
             if(CTBody::JSTest()!=1)
             {
@@ -178,12 +178,12 @@ class CTHooks {
             }
         }
 
-        // Disallow account with CleanTalk comment 
+        // Disallow account with CleanTalk comment
         if ($ctResult->allow == 0) {
             $allowAccount = false;
             $message = $ctResult->comment;
         }
-        
+
         if ($ctResult->inactive === 1) {
             CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
         }
@@ -219,18 +219,18 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
         }
     }
 
-    // Disallow edit with CleanTalk comment 
+    // Disallow edit with CleanTalk comment
     if ($ctResult->allow == 0) {
         $errors[] = $ctResult->comment;
     }
-   
+
     if ($ctResult->inactive === 1) {
         CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
-    }  
+    }
 
     if (count($errors))
         throw new PermissionsError( 'move', $errors  );
-}     
+}
     public static function onSkinAfterBottomScripts( $skin, &$text )
     {
         global $wgCTShowLink, $wgCTSFW, $wgCTAccessKey;
@@ -242,7 +242,7 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
 
 
         /* SFW starts */
-        
+
         if($wgCTSFW && !$dbr->isReadOnly())
         {
             CTBody::createSFWTables();
@@ -257,14 +257,14 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
                 $settings_changed = false;
 
                 if(!isset($settings['lastSFWUpdate']) || ($settings['lastSFWUpdate'] && (time()-$settings['lastSFWUpdate'] > 86400)))
-                {                   
+                {
                     $sfw->sfw_update($wgCTAccessKey);
                     $settings['lastSFWUpdate'] = time();
                     $settings_changed = true;
                 }
                 if (!isset($settings['lastSFWSendLogs']) || $settings['lastSFWSendLogs'] && (time() - $settings['lastSFWSendLogs'] > 3600))
                 {
-                    $sfw->send_logs($wgCTAccessKey); 
+                    $sfw->send_logs($wgCTAccessKey);
                     $settings['lastSFWSendLogs'] = time();
                     $settings_changed = true;
                 }
@@ -274,9 +274,9 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
                 }
 
                 /* Check IP here */
-                
+
                 $is_sfw_check = true;
-                $sfw->ip_array = (array)CleantalkSFW::ip_get(array('real'), true);  
+                $sfw->ip_array = (array)CleantalkSFW::ip_get(array('real'), true);
 
                 foreach($sfw->ip_array as $key => $value)
                 {
@@ -289,7 +289,7 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
                             $sfw->sfw_update_logs($value, 'passed');
                         }
                     }
-                } unset($key, $value);  
+                } unset($key, $value);
 
                 if($is_sfw_check)
                 {
@@ -299,11 +299,11 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
                         $sfw->sfw_update_logs($sfw->blocked_ip, 'blocked');
                         $sfw->sfw_die($wgCTAccessKey);
                     }
-                }               
+                }
                 /* Finish checking IP */
             }
         }
-        
+
         /* SFW ends */
         
         if($wgCTShowLink)

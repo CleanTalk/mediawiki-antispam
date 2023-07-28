@@ -11,7 +11,7 @@ require_once('CleantalkHelper.php' );
 require_once('CleantalkSFW.php' );
 
 /**
- * cleantalk.org is a cloud antispam service 
+ * cleantalk.org is a cloud antispam service
  *
  * @see http://stopforumspam.com/faq
  * @author Denis Shagimuratov <shagimuratov@cleantalk.org>
@@ -32,22 +32,22 @@ $wgCTAccessKey = '';
 $wgCTCheckNoConnect = true;
 
 /**
- * Cloud URL 
+ * Cloud URL
  */
 $wgCTServerURL = 'http://moderate.cleantalk.org/api2.0';
 
 /**
- * Extension agent name and version 
+ * Extension agent name and version
  */
 $wgCTAgent = 'mediawiki-23';
 
 /**
- * Extension name 
+ * Extension name
  */
 $wgCTExtName = 'Antispam by CleanTalk';
 
 /**
- * Admin notificaction account ID 
+ * Admin notificaction account ID
  */
 $wgCTAdminAccountId = 1;
 
@@ -91,7 +91,7 @@ if ( file_exists(__DIR__ . '/Antispam.store.dat') ) {
 
 $wgExtensionCredits['antispam'][] = array(
 	'path' => __FILE__,
-	'name' => $wgCTExtName, 
+	'name' => $wgCTExtName,
 	'author' => 'Denis Shagimuratov',
 	'url' => 'https://www.mediawiki.org/wiki/Extension:Antispam',
 	'descriptionmsg' => 'cleantalk-desc',
