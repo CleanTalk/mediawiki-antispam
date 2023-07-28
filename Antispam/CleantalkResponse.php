@@ -2,13 +2,13 @@
 /**
  * Cleantalk Response class
  *
- * @version 2.3
+ * @version 2.4
  * @package Cleantalk
  * @subpackage Response
  * @author Cleantalk team (welcome@cleantalk.org)
  * @copyright (C) 2014 CleanTalk team (http://cleantalk.org)
  * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
- * @see https://github.com/CleanTalk/php-antispam 
+ * @see https://github.com/CleanTalk/php-antispam
  *
  */
 
@@ -20,13 +20,13 @@ class CleantalkResponse
      * @var int
      */
     public $received = null;
-	
+
     /**
      *  Is stop words
      * @var int
      */
     public $stop_words = null;
-    
+
     /**
      * Cleantalk comment
      * @var string
@@ -68,7 +68,7 @@ class CleantalkResponse
      * @var string
      */
     public $curl_err = null;
-	
+
     /**
      * Is fast submit, 1|0
      * @var string
@@ -83,49 +83,49 @@ class CleantalkResponse
 
     /**
      * Is JS
-     * @var type 
+     * @var type
      */
     public $js_disabled = null;
 
     /**
      * Sms check
-     * @var type 
+     * @var type
      */
     public $sms_allow = null;
 
     /**
      * Sms code result
-     * @var type 
+     * @var type
      */
     public $sms = null;
-	
+
     /**
      * Sms error code
-     * @var type 
+     * @var type
      */
     public $sms_error_code = null;
-	
+
     /**
      * Sms error code
-     * @var type 
+     * @var type
      */
     public $sms_error_text = null;
-    
+
 	/**
      * Stop queue message, 1|0
-     * @var int  
+     * @var int
      */
     public $stop_queue = null;
-	
+
     /**
      * Account shuld by deactivated after registration, 1|0
-     * @var int  
+     * @var int
      */
     public $inactive = null;
 
     /**
-     * Account status 
-     * @var int  
+     * Account status
+     * @var int
      */
     public $account_status = -1;
 
@@ -165,7 +165,7 @@ class CleantalkResponse
 			$this->received = (isset($obj->received)) ? $obj->received : -1;
 
             if ($this->errno !== 0 && $this->errstr !== null && $this->comment === null)
-                $this->comment = '*** ' . $this->errstr . ' Antispam service cleantalk.org ***'; 
+                $this->comment = '*** ' . $this->errstr . ' Antispam service cleantalk.org ***';
         }
     }
 }

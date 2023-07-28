@@ -39,7 +39,7 @@ $wgCTServerURL = 'http://moderate.cleantalk.org/api2.0';
 /**
  * Extension agent name and version
  */
-$wgCTAgent = 'mediawiki-23';
+$wgCTAgent = 'mediawiki-24';
 
 /**
  * Extension name
@@ -95,7 +95,7 @@ $wgExtensionCredits['antispam'][] = array(
 	'author' => 'Denis Shagimuratov',
 	'url' => 'https://www.mediawiki.org/wiki/Extension:Antispam',
 	'descriptionmsg' => 'cleantalk-desc',
-	'version' => '2.3',
+	'version' => '2.4',
 );
 
 $wgAutoloadClasses['CTBody'] = __DIR__ . '/Antispam.body.php';

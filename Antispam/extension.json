@@ -49,7 +49,7 @@
 			"value": "http://moderate.cleantalk.org/api2.0"
 		},
 		"CTAgent": {
-			"value": "mediawiki-23"
+			"value": "mediawiki-24"
 		},
 		"CTExtName": {
 			"value": "Antispam by CleanTalk"
