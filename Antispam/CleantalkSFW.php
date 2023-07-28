@@ -238,7 +238,9 @@ class CleantalkSFW extends CleantalkHelper
 		}else{
 			$sfw_die_page = str_replace('{GENERATED}', "<h2 class='second'>The page was generated at&nbsp;".date("D, d M Y H:i:s")."</h2>",$sfw_die_page);
 		}
-		
+
+        @error_reporting(E_ERROR | E_WARNING | E_PARSE);
+
 		die($sfw_die_page);
 
 	}
