@@ -71,7 +71,7 @@
 		},
 		"CTMinEditCount": {
 			"value": 10
-		},
+		}
 	},
 	"manifest_version": 2
 }
