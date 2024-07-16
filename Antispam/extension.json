@@ -46,10 +46,10 @@
 			"value": true
 		},
 		"CTServerURL": {
-			"value": "http://moderate.cleantalk.org/api2.0"
+			"value": "https://moderate.cleantalk.org/api2.0"
 		},
 		"CTAgent": {
-			"value": "mediawiki-24"
+			"value": "mediawiki-2.4.1"
 		},
 		"CTExtName": {
 			"value": "Antispam by CleanTalk"

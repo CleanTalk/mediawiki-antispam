@@ -34,12 +34,12 @@ $wgCTCheckNoConnect = true;
 /**
  * Cloud URL
  */
-$wgCTServerURL = 'http://moderate.cleantalk.org/api2.0';
+$wgCTServerURL = 'https://moderate.cleantalk.org/api2.0';
 
 /**
  * Extension agent name and version
  */
-$wgCTAgent = 'mediawiki-24';
+$wgCTAgent = 'mediawiki-2.4.1';
 
 /**
  * Extension name
