@@ -1,5 +1,7 @@
 <?php
 
+use MediaWiki\MediaWikiServices;
+
 class CTHooks {
 
     /**
@@ -238,7 +240,8 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
         $text .= CTBody::AddJSCode();
         CTBody::ctSetCookie();
 
-        $dbr = wfGetDB(DB_MASTER);
+        $services = MediaWikiServices::getInstance();
+        $dbr = $services->getConnectionProvider()->getPrimaryDatabase();
 
 
         /* SFW starts */

@@ -1,4 +1,7 @@
 <?php
+
+use MediaWiki\MediaWikiServices;
+
 require_once('CleantalkHelper.php' );
 /*
  * CleanTalk SpamFireWall base class
@@ -30,7 +33,8 @@ class CleantalkSFW extends CleantalkHelper
 	public function __construct()
 	{
 		$this->table_prefix = "";
-		$this->db = wfGetDB(DB_MASTER);
+		$services = MediaWikiServices::getInstance();
+		$this->db = $services->getConnectionProvider()->getPrimaryDatabase();
 	}
 
 	public function unversal_query($query, $straight_query = false)

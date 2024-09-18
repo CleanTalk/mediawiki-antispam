@@ -1,5 +1,7 @@
 <?php
 
+use MediaWiki\MediaWikiServices;
+
 class CTBody {
     /**
      * Builds MD5 secret hash for JavaScript test (self::JSTest) 
@@ -78,7 +80,8 @@ class CTBody {
     } 
     public static function createSFWTables()
     {
-        $dbr = wfGetDB(DB_MASTER);
+        $services = MediaWikiServices::getInstance();
+        $dbr = $services->getConnectionProvider()->getPrimaryDatabase();
 
         $dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
             `network` int(11) unsigned NOT NULL,
