@@ -240,6 +240,7 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
 
         $dbr = wfGetDB(DB_MASTER);
 
+        CTBody::createSettingsTable();
 
         /* SFW starts */
 
@@ -249,28 +250,19 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
 
             $sfw = new CleantalkSFW();
 
-            $settings = CTBody::ctGetSettings( $sfw );
+            $settings = CTBody::ctGetSettings();
 
-            if (isset($settings))
+            if ( $settings )
             {
-
-                $settings_changed = false;
-
                 if(!isset($settings['lastSFWUpdate']) || ($settings['lastSFWUpdate'] && (time()-$settings['lastSFWUpdate'] > 86400)))
                 {
                     $sfw->sfw_update($wgCTAccessKey);
-                    $settings['lastSFWUpdate'] = time();
-                    $settings_changed = true;
+                    CTBody::ctWriteSettings('lastSFWUpdate', time());
                 }
-                if (!isset($settings['lastSFWSendLogs']) || $settings['lastSFWSendLogs'] && (time() - $settings['lastSFWSendLogs'] > 3600))
+                if (!isset($settings['lastSFWSendLogs']) || ($settings['lastSFWSendLogs'] && (time() - $settings['lastSFWSendLogs'] > 3600)))
                 {
                     $sfw->send_logs($wgCTAccessKey);
-                    $settings['lastSFWSendLogs'] = time();
-                    $settings_changed = true;
-                }
-
-                if( $settings_changed ) {
-                    CTBody::ctWriteSettings( $sfw, $settings );
+                    CTBody::ctWriteSettings('lastSFWSendLogs', time());
                 }
 
                 /* Check IP here */
