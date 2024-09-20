@@ -2,3 +2,10 @@
 !README.md
 !Antispam/
 !Antispam/*
+!.github/
+!.github/*
+!.github/workflows/
+!.github/workflows/*
+!composer.json
+!tests/
+!tests/**
