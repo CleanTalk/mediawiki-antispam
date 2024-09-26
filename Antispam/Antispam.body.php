@@ -96,13 +96,25 @@ class CTBody {
             `entries_timestamp` int(11) NOT NULL,   
             PRIMARY KEY `ip` (`ip`)
             ) ENGINE=MyISAM;");
+    }
 
-        $dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw_settings` (
-            `setting_name` varchar(128) NOT NULL,
-            `setting_value` int(24) NOT NULL
-            ) ENGINE = MyISAM;");
-     
-    } 
+    /**
+     * Create common storage for different settings
+     *
+     * @return void
+     */
+    public static function createSettingsTable()
+    {
+        $services = MediaWikiServices::getInstance();
+        $dbw = $services->getConnectionProvider()->getPrimaryDatabase();
+
+        $dbw->query("CREATE TABLE IF NOT EXISTS cleantalk_settings (
+            setting_name varchar(128) NOT NULL,
+            setting_value varchar(128) NOT NULL,
+            PRIMARY KEY (setting_name)
+            )"
+        );
+    }
     public static function onSpamCheck($method, $params)
     {
         global $wgCTAccessKey, $wgCTServerURL, $wgCTAgent;
@@ -252,15 +264,13 @@ class CTBody {
     public static function SendAdminEmail( $title, $body ) {
         global $wgCTAdminAccountId, $wgCTAdminNotificaionInteval;
 
-        $sfw = new CleantalkSFW();
-        $settings = CTBody::ctGetSettings( $sfw );
+        $settings = CTBody::ctGetSettings();
 
         if ( $settings )
         {
             if (!isset($settings['lastAdminNotificaionSent']))
             {
-                $settings['lastAdminNotificaionSent'] = time();
-                CTBody::ctWriteSettings( $sfw, $settings );
+                CTBody::ctWriteSettings('lastAdminNotificaionSent', time());
             }
             // Skip notification if permitted interval doesn't exhaust
             if ( isset( $settings['lastAdminNotificaionSent'] ) && time() - $settings['lastAdminNotificaionSent'] < $wgCTAdminNotificaionInteval ) {
@@ -272,8 +282,7 @@ class CTBody {
             $status = $u->sendMail( $title , $body );
 
             if ( $status->isGood() ) {
-                $settings['lastAdminNotificaionSent'] = time();
-                CTBody::ctWriteSettings( $sfw, $settings );
+                CTBody::ctWriteSettings('lastAdminNotificaionSent', time());
             }
             return $status->isGood();
         }
@@ -286,24 +295,26 @@ class CTBody {
     /**
      * Get settings from DB instead Antispam.store.dat file
      *
-     * @param CleantalkSFW $sfw
-     * @return array|bool(false)
+     * @param $setting_name
+     * @return array|bool
      */
-    public static function ctGetSettings(CleantalkSFW $sfw )
+    public static function ctGetSettings()
     {
+        $services = MediaWikiServices::getInstance();
+        $dbw = $services->getConnectionProvider()->getPrimaryDatabase();
 
-        $get_settings = 'SELECT * FROM `cleantalk_sfw_settings`';
-        $sfw->unversal_query( $get_settings, true );
-        $sfw->unversal_fetch_all();
-        $settings_from_db = $sfw->get_db_result_data();
+        $get_settings_query = "SELECT * FROM cleantalk_settings";
+        $res = $dbw->query($get_settings_query);
 
-        $settings = array();
-        foreach( $settings_from_db as $key => $value ) {
-            $settings[$value['setting_name']] = $value['setting_value'];
+        if ( $res ) {
+            $result = [];
+            while ($row = $res->fetchRow()){
+                $result[$row[0]] = $row[1];
+            }
+            return $result;
         }
 
-        return $settings;
-
+        return false;
     }
 
     /**
@@ -311,21 +322,16 @@ class CTBody {
      *
      * @param $settings
      */
-    public static function ctWriteSettings( CleantalkSFW $sfw, $settings )
+    public static function ctWriteSettings($setting_name, $setting_value)
     {
-        if( is_array($settings) && !empty($settings) ) {
+        $services = MediaWikiServices::getInstance();
+        $dbw = $services->getConnectionProvider()->getPrimaryDatabase();
 
-            foreach( $settings as $setting_name => $setting_value ) {
-                $delete_row = 'DELETE FROM `cleantalk_sfw_settings` WHERE `setting_name` = \'' . $setting_name . '\'';
-                $sfw->unversal_query( $delete_row, true );
-                $write_setting = 'INSERT INTO `cleantalk_sfw_settings` VALUES (\'' . $setting_name . '\', \'' . $setting_value . '\')';
-                $sfw->unversal_query( $write_setting, true );
-            }
+        $name = addslashes($setting_name);
+        $value = addslashes($setting_value);
 
-        } else {
-            return;
-        }
-        return;
+        $set_settings_query = "INSERT INTO cleantalk_settings (setting_name, setting_value) VALUES ('$name', '$value') ON DUPLICATE KEY UPDATE setting_name = VALUE(setting_name), setting_value = VALUE(setting_value)";
+        $dbw->query($set_settings_query);
     }
 
     public static function apbct_cookie__set($name, $value = '', $expires = 0, $path = '/', $domain = null, $secure = false, $httponly = false, $samesite = null ){
