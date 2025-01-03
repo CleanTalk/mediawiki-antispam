@@ -78,7 +78,7 @@ class CTBody {
     } 
     public static function createSFWTables()
     {
-        $dbr = wfGetDB(DB_MASTER);
+        $dbr = wfGetDB(DB_PRIMARY);
 
         $dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
             `network` int(11) unsigned NOT NULL,
