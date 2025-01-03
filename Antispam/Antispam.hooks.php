@@ -238,7 +238,7 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
         $text .= CTBody::AddJSCode();
         CTBody::ctSetCookie();
 
-        $dbr = wfGetDB(DB_MASTER);
+        $dbr = wfGetDB(DB_PRIMARY);
 
 
         /* SFW starts */
