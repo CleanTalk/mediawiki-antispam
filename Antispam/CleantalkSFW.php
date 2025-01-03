@@ -30,7 +30,7 @@ class CleantalkSFW extends CleantalkHelper
 	public function __construct()
 	{
 		$this->table_prefix = "";
-		$this->db = wfGetDB(DB_MASTER);
+		$this->db = wfGetDB(DB_PRIMARY);
 	}
 
 	public function unversal_query($query, $straight_query = false)
