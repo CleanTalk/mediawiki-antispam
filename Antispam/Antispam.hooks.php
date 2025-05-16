@@ -80,6 +80,7 @@ class CTHooks {
         $user = $editor->getArticle()->getContext()->getUser();
 
         $allowEdit = true;
+        $isNew = $editor->getExpectedParentRevision() === null;
 
         // Skip antispam test if editor member of special group
         if ( $editor->getArticle()->getContext()->getUser()->isAllowed('cleantalk-bypass') ) {
@@ -87,7 +88,7 @@ class CTHooks {
         }
 
         // Skip antispam test of not new edit if flag is set
-        if ( $wgCTNewEditsOnly && !$editor->isNew) {
+        if ( $wgCTNewEditsOnly && !$isNew) {
             return $allowEdit;
         }
 
