@@ -256,7 +256,7 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
 
             $settings = CTBody::ctGetSettings();
 
-            if ( $settings )
+            if ( $settings !== false )
             {
                 if(!isset($settings['lastSFWUpdate']) || ($settings['lastSFWUpdate'] && (time()-$settings['lastSFWUpdate'] > 86400)))
                 {
