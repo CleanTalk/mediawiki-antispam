@@ -83,19 +83,23 @@ class CTBody {
         $services = MediaWikiServices::getInstance();
         $dbr = $services->getConnectionProvider()->getPrimaryDatabase();
 
-        $dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
-            `network` int(11) unsigned NOT NULL,
-            `mask` int(11) unsigned NOT NULL,
-            INDEX (  `network` ,  `mask` )
-            ) ENGINE = MYISAM ;");  
+        if ( ! $dbr->tableExists('cleantalk_sfw_settings') ) {
+            $dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
+                `network` int(11) unsigned NOT NULL,
+                `mask` int(11) unsigned NOT NULL,
+                INDEX (  `network` ,  `mask` )
+            );");
+        }
 
-        $dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw_logs` (
-            `ip` varchar(15) NOT NULL,
-            `all_entries` int(11) NOT NULL,
-            `blocked_entries` int(11) NOT NULL,  
-            `entries_timestamp` int(11) NOT NULL,   
-            PRIMARY KEY `ip` (`ip`)
-            ) ENGINE=MyISAM;");
+        if ( ! $dbr->tableExists('cleantalk_sfw_logs') ) {
+            $dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw_logs` (
+                `ip` varchar(15) NOT NULL,
+                `all_entries` int(11) NOT NULL,
+                `blocked_entries` int(11) NOT NULL,  
+                `entries_timestamp` int(11) NOT NULL,   
+                PRIMARY KEY `ip` (`ip`)
+            );");
+        }
     }
 
     /**
@@ -106,14 +110,16 @@ class CTBody {
     public static function createSettingsTable()
     {
         $services = MediaWikiServices::getInstance();
-        $dbw = $services->getConnectionProvider()->getPrimaryDatabase();
+        $dbr = $services->getConnectionProvider()->getPrimaryDatabase();
 
-        $dbw->query("CREATE TABLE IF NOT EXISTS cleantalk_settings (
+        if ( ! $dbr->tableExists('cleantalk_sfw_logs') ) {
+            $dbr->query("CREATE TABLE IF NOT EXISTS cleantalk_settings (
             setting_name varchar(128) NOT NULL,
             setting_value varchar(128) NOT NULL,
             PRIMARY KEY (setting_name)
             )"
-        );
+            );
+        }
     }
     public static function onSpamCheck($method, $params)
     {
