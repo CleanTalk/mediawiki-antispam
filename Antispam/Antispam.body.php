@@ -80,8 +80,8 @@ class CTBody {
     } 
     public static function createSFWTables()
     {
-        $services = MediaWikiServices::getInstance();
-        $dbr = $services->getConnectionProvider()->getPrimaryDatabase();
+        $dbr = self::getDBHandler();
+
 
         if ( ! $dbr->tableExists('cleantalk_sfw_settings') ) {
             $dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
@@ -109,8 +109,7 @@ class CTBody {
      */
     public static function createSettingsTable()
     {
-        $services = MediaWikiServices::getInstance();
-        $dbr = $services->getConnectionProvider()->getPrimaryDatabase();
+        $dbr = self::getDBHandler();
 
         if ( ! $dbr->tableExists('cleantalk_sfw_logs') ) {
             $dbr->query("CREATE TABLE IF NOT EXISTS cleantalk_settings (
@@ -306,8 +305,7 @@ class CTBody {
      */
     public static function ctGetSettings()
     {
-        $services = MediaWikiServices::getInstance();
-        $dbw = $services->getConnectionProvider()->getPrimaryDatabase();
+        $dbw = self::getDBHandler();
 
         $get_settings_query = "SELECT * FROM cleantalk_settings";
         $res = $dbw->query($get_settings_query);
@@ -330,8 +328,7 @@ class CTBody {
      */
     public static function ctWriteSettings($setting_name, $setting_value)
     {
-        $services = MediaWikiServices::getInstance();
-        $dbw = $services->getConnectionProvider()->getPrimaryDatabase();
+        $dbw = self::getDBHandler();
 
         $name = addslashes($setting_name);
         $value = addslashes($setting_value);
@@ -365,6 +362,19 @@ class CTBody {
 
         }
 
+    }
+
+    public static function getDBHandler()
+    {
+        global $wgVersion;
+        $version = defined('MW_VERSION') ? MW_VERSION : $wgVersion;
+        if ($oldVersion = version_compare( $version, '1.31', '>' )) {
+            $dbProvider  = MediaWikiServices::getInstance()->getConnectionProvider();
+            $dbw = $dbProvider->getPrimaryDatabase();
+        } else {
+            $dbw = wfGetDB(DB_MASTER);
+        }
+        return $dbw;
     }
 
 }

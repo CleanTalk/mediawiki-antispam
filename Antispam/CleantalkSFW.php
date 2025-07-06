@@ -1,8 +1,7 @@
 <?php
 
-use MediaWiki\MediaWikiServices;
-
 require_once('CleantalkHelper.php' );
+require_once('Antispam.body.php' );
 /*
  * CleanTalk SpamFireWall base class
  * Compatible only with Wordpress.
@@ -33,8 +32,7 @@ class CleantalkSFW extends CleantalkHelper
 	public function __construct()
 	{
 		$this->table_prefix = "";
-		$services = MediaWikiServices::getInstance();
-		$this->db = $services->getConnectionProvider()->getPrimaryDatabase();
+		$this->db = CTBody::getDBHandler();
 	}
 
 	public function unversal_query($query, $straight_query = false)
