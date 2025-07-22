@@ -193,18 +193,32 @@ class CTHooks {
     }
 public static function onTitleMove( Title $title, Title $newtitle, User $user )
 {
-    global $wgCTExtName;
+    global $wgCTExtName, $wgRequest;
 
     // Skip antispam test if user is member of special group
     if ( $user->isAllowed('cleantalk-bypass') ) {
         return;
     }
     $errors = [];
+
+    //collect message
+    $page_chunk = '';
+    $reason = '';
+    if (method_exists($newtitle, 'getPartialURL')) {
+        $page_chunk = $newtitle->getPartialURL();
+    }
+    if (method_exists($wgRequest, 'getVal')) {
+        $reason = $wgRequest->getVal('wpReason');
+        $reason = empty($reason) ? '' : ' ' . $reason;
+    }
+    $msg = $page_chunk . $reason;
+
     // Check
     $ctResult = CTBody::onSpamCheck(
-        'check_message', array(
-            'message' => $newtitle->mUrlform ,
-            'sender_email' => $user->mEmail,
+        'check_message',
+        array(
+            'message'         => $msg,
+            'sender_email'    => $user->mEmail,
             'sender_nickname' => $user->mName,
         )
     );
