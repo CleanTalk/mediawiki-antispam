@@ -255,7 +255,9 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
 
         $dbr = CTBody::getDBHandler();
 
-        CTBody::createSettingsTable();
+        if ( ! $dbr->isReadOnly() ) {
+            CTBody::createSettingsTable();
+        }
 
         /* SFW starts */
 

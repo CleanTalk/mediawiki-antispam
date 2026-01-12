@@ -82,8 +82,7 @@ class CTBody {
     {
         $dbr = self::getDBHandler();
 
-
-        if ( ! $dbr->tableExists('cleantalk_sfw_settings') ) {
+        if ( ! $dbr->tableExists('cleantalk_sfw') ) {
             $dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
                 `network` int(11) unsigned NOT NULL,
                 `mask` int(11) unsigned NOT NULL,
@@ -111,7 +110,7 @@ class CTBody {
     {
         $dbr = self::getDBHandler();
 
-        if ( ! $dbr->tableExists('cleantalk_sfw_logs') ) {
+        if ( ! $dbr->tableExists('cleantalk_settings') ) {
             $dbr->query("CREATE TABLE IF NOT EXISTS cleantalk_settings (
             setting_name varchar(128) NOT NULL,
             setting_value varchar(128) NOT NULL,
@@ -306,6 +305,10 @@ class CTBody {
     public static function ctGetSettings()
     {
         $dbw = self::getDBHandler();
+
+        if ( ! $dbw->tableExists('cleantalk_settings') ) {
+            return false;
+        }
 
         $get_settings_query = "SELECT * FROM cleantalk_settings";
         $res = $dbw->query($get_settings_query);
