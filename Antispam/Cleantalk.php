@@ -451,16 +451,21 @@ class Cleantalk
             } else {
                 // Loop until find work server
                 foreach ($this->get_servers_ip($pool) as $server) {
-                    if ($server['host'] === 'localhost' || $server['ip'] === null) {
+                    if ($server['host'] === 'localhost' || $server['ip'] === null)
+                    {
                         $work_url = $server['host'];
                     } else {
-                        $server_host = $server['ip'];
-                        $work_url = $server_host;
+                        $host = CleantalkHelper::isCleanTalkServer($server['ip']);
+                        if (!$host) {
+                            continue;
+                        }
+                        $work_url = $url_prefix . $host;
                     }
-                    $host = filter_var($work_url,FILTER_VALIDATE_IP) ? gethostbyaddr($work_url) : $work_url;
-                    $work_url = $url_prefix . $host;
+
                     if (isset($url_suffix))
+                    {
                         $work_url = $work_url . $url_suffix;
+                    }
 
                     $this->work_url = $work_url;
                     $this->server_ttl = $server['ttl'];
