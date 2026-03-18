@@ -13,3 +13,7 @@ MediaWiki >= 1.29.0
 2. Add the following code at the bottom of your LocalSettings.php:
 
 `wfLoadExtension( 'Antispam' );`
+
+### Websites that trust CleanTalk!
+
+![CleanTalk Anti-Spam Rating](https://cleantalk.org/webpack/img/cleantalk_rating.png)
