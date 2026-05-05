@@ -453,9 +453,9 @@ class Cleantalk
                 foreach ($this->get_servers_ip($pool) as $server) {
                     if ($server['host'] === 'localhost' || $server['ip'] === null)
                     {
-                        $work_url = $server['host'];
+                        $work_url = $url_prefix . $server['host'];
                     } else {
-                        $host = CleantalkHelper::isCleanTalkServer($server['ip']);
+                        $host = CleantalkHelper::ipResolve($server['ip']);
                         if (!$host) {
                             continue;
                         }
