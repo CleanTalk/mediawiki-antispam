@@ -38,12 +38,6 @@ jobs:
       - name: Code Checkout
         uses: actions/checkout@v4
 
-      - name: Make the script files executable
-        run: chmod +x ./tests/wp-test-setup.sh
-
-      - name: Install WP develop
-        run: ./tests/wp-test-setup.sh wordpress_test root root localhost latest
-
       - name: Install Dependencies
         run: composer i
 
@@ -51,3 +45,16 @@ jobs:
         env:
           CLEANTALK_TEST_API_KEY: ${{ secrets.CLEANTALK_TEST_API_KEY }}
         run: composer test
+
+      - name: Matrix notify on failure
+        if: failure()
+        uses: Glomberg/matrix-messenger-action@master
+        with:
+          server: ${{ secrets.MATRIX_SERVER }}
+          to: ${{ secrets.MATRIX_EXTERNSION_ROOM }}
+          token: ${{ secrets.MATRIX_USER_TOKEN }}
+          message: |
+            Hi, <strong>${{ github.actor }}</strong>! Your commit for <strong>${{ github.repository }}</strong> 
+            contains 💯 the best solution but it have to be fixed!
+            <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Auto-Tests (PHPUnit, PHPCS, Psalm)</a> build failed ⛔!
+

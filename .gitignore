@@ -9,3 +9,4 @@
 !composer.json
 !tests/
 !tests/**
+/tests/.phpunit.result.cache
