@@ -1,14 +1,14 @@
 <?php
 
-if ( !defined( 'MEDIAWIKI' ) ) {
-	die;
+if ( !defined('MEDIAWIKI') ) {
+    die;
 }
 
-require_once('Cleantalk.php' );
-require_once('CleantalkRequest.php' );
-require_once('CleantalkResponse.php' );
-require_once('CleantalkHelper.php' );
-require_once('CleantalkSFW.php' );
+require_once('Cleantalk.php');
+require_once('CleantalkRequest.php');
+require_once('CleantalkResponse.php');
+require_once('CleantalkHelper.php');
+require_once('CleantalkSFW.php');
 
 /**
  * cleantalk.org is a cloud antispam service
@@ -90,12 +90,12 @@ if ( file_exists(__DIR__ . '/Antispam.store.dat') ) {
 }
 
 $wgExtensionCredits['antispam'][] = array(
-	'path' => __FILE__,
-	'name' => $wgCTExtName,
-	'author' => 'Denis Shagimuratov',
-	'url' => 'https://www.mediawiki.org/wiki/Extension:Antispam',
-	'descriptionmsg' => 'cleantalk-desc',
-	'version' => '2.4',
+    'path' => __FILE__,
+    'name' => $wgCTExtName,
+    'author' => 'Denis Shagimuratov',
+    'url' => 'https://www.mediawiki.org/wiki/Extension:Antispam',
+    'descriptionmsg' => 'cleantalk-desc',
+    'version' => '2.4',
 );
 
 $wgAutoloadClasses['CTBody'] = __DIR__ . '/Antispam.body.php';
