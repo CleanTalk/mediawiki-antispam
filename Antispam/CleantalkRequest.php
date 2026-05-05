@@ -1,33 +1,34 @@
 <?php
+
 /**
  * Request class
  */
-class CleantalkRequest {
-
+class CleantalkRequest
+{
      /**
      *  All http request headers
      * @var string
      */
      public $all_headers = null;
-     
+
      /**
      *  IP address of connection
      * @var string
      */
      //public $remote_addr = null;
-     
+
      /**
      *  Last error number
      * @var integer
      */
      public $last_error_no = null;
-     
+
      /**
      *  Last error time
      * @var integer
      */
      public $last_error_time = null;
-     
+
      /**
      *  Last error text
      * @var string
@@ -114,7 +115,7 @@ class CleantalkRequest {
      * @var int
      */
     public $submit_time = null;
-    
+
     public $x_forwarded_for = '';
     public $x_real_ip = '';
 
@@ -144,26 +145,26 @@ class CleantalkRequest {
 
     /**
      * Phone number
-     * @var type 
+     * @var type
      */
     public $phone = null;
-    
+
     /**
     * Method name
     * @var string
     */
-    public $method_name = 'check_message'; 
+    public $method_name = 'check_message';
 
     /**
      * Fill params with constructor
      * @param type $params
      */
-    public function __construct($params = null) {
+    public function __construct($params = null)
+    {
         if (is_array($params) && count($params) > 0) {
             foreach ($params as $param => $value) {
                 $this->{$param} = $value;
             }
         }
     }
-
 }

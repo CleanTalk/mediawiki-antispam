@@ -1,7 +1,7 @@
 <?php
 
-class CTHooks {
-
+class CTHooks
+{
     /**
      * Upload spam test
      * UploadBase $upload
@@ -9,12 +9,13 @@ class CTHooks {
      * bool|array $error
      * @return none
      */
-    public static function onUploadFilter ( $upload, $mime, &$error ) {
+    public static function onUploadFilter($upload, $mime, &$error)
+    {
         global $wgRequest, $wgCTExtName, $wgCTMinEditCount;
         $user = RequestContext::getMain()->getUser();
 
         # Skip spam check if error exists already
-        if ($error !== TRUE) {
+        if ($error !== true) {
             return;
         }
 
@@ -33,21 +34,19 @@ class CTHooks {
 
         // Check
         $ctResult = CTBody::onSpamCheck(
-            'check_message', array(
+            'check_message',
+            array(
                 'message' => $wgRequest->getVal('wpUploadDescription'),
                 'sender_email' => $user->mEmail,
                 'sender_nickname' => $user->mName,
             )
         );
         if ( $ctResult->errno != 0 ) {
-            if(CTBody::JSTest() != 1)
-            {
+            if (CTBody::JSTest() != 1) {
                 $ctResult->allow = 0;
                 $ctResult->comment = "Forbidden. Please, enable Javascript.";
                 $allowUpload = false;
-            }
-            else
-            {
+            } else {
                 $ctResult->allow = 1;
                 $allowUpload = true;
             }
@@ -63,7 +62,7 @@ class CTHooks {
         }
 
         if ($ctResult->inactive === 1) {
-            CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
+            CTBody::SendAdminEmail($wgCTExtName, $ctResult->comment);
         }
 
         return;
@@ -73,7 +72,8 @@ class CTHooks {
      * Edit spam test
      * @return bool
      */
-    public static function onEditFilter (  $editor, $text, $section, &$error, $summary ) {
+    public static function onEditFilter($editor, $text, $section, &$error, $summary)
+    {
         global $wgCTExtName, $wgCTNewEditsOnly, $wgCTMinEditCount;
         $user = $editor->getArticle()->getContext()->getUser();
 
@@ -103,7 +103,8 @@ class CTHooks {
 
         // Check
         $ctResult = CTBody::onSpamCheck(
-            'check_message', array(
+            'check_message',
+            array(
                 'message' => $editor->getTitle()->getText() . "\n \n" . $summary . "\n \n" . $text,
                 'sender_email' => $editor->getArticle()->getContext()->getUser()->mEmail,
                 'sender_nickname' => $editor->getArticle()->getContext()->getUser()->mName,
@@ -114,17 +115,13 @@ class CTHooks {
         /*if ( $ctResult->errno != 0 ) {
             return $allowEdit;
         }*/
-        if ( $ctResult->errno != 0 )
-        {
-            if(CTBody::JSTest()!=1)
-            {
-                $ctResult->allow=0;
+        if ( $ctResult->errno != 0 ) {
+            if (CTBody::JSTest() != 1) {
+                $ctResult->allow = 0;
                 $ctResult->comment = "Forbidden. Please, enable Javascript.";
                 $allowEdit = false;
-            }
-            else
-            {
-                $ctResult->allow=1;
+            } else {
+                $ctResult->allow = 1;
                 $allowEdit = true;
             }
         }
@@ -136,14 +133,14 @@ class CTHooks {
             // Converting links to wikitext format
             $error = preg_replace("(<a\shref=\"([^\s]+)\".+>([a-f0-9]+)</a>)", "[$1 $2]", $error);
 
-            $error = Html::openElement( 'div', array( 'class' => 'errorbox' ) ) .
+            $error = Html::openElement('div', array( 'class' => 'errorbox' )) .
                $error .
-               Html::closeElement( 'div' ) . "\n" .
-               Html::element( 'br', array( 'clear' => 'all' ) ) . "\n";
+               Html::closeElement('div') . "\n" .
+               Html::element('br', array( 'clear' => 'all' )) . "\n";
         }
 
         if ($ctResult->inactive === 1) {
-            CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
+            CTBody::SendAdminEmail($wgCTExtName, $ctResult->comment);
         }
 
         return $allowEdit;
@@ -153,29 +150,27 @@ class CTHooks {
      * Account spam test
      * @return bool
      */
-    public static function onAbortNewAccount ( $user, &$message ) {
+    public static function onAbortNewAccount($user, &$message)
+    {
         global $wgCTExtName;
 
         $allowAccount = true;
 
         // Check
         $ctResult = CTBody::onSpamCheck(
-            'check_newuser', array(
+            'check_newuser',
+            array(
                 'sender_email' => $user->mEmail,
                 'sender_nickname' => $user->mName,
             )
         );
         // Allow account if we have any API errors
-        if ( $ctResult->errno != 0 )
-        {
-            if(CTBody::JSTest()!=1)
-            {
-                $ctResult->allow=0;
+        if ( $ctResult->errno != 0 ) {
+            if (CTBody::JSTest() != 1) {
+                $ctResult->allow = 0;
                 $ctResult->comment = "Forbidden. Please, enable Javascript.";
-            }
-            else
-            {
-                $ctResult->allow=1;
+            } else {
+                $ctResult->allow = 1;
             }
         }
 
@@ -186,67 +181,65 @@ class CTHooks {
         }
 
         if ($ctResult->inactive === 1) {
-            CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
+            CTBody::SendAdminEmail($wgCTExtName, $ctResult->comment);
         }
 
         return $allowAccount;
     }
-public static function onTitleMove( Title $title, Title $newtitle, User $user )
-{
-    global $wgCTExtName, $wgRequest;
+    public static function onTitleMove(Title $title, Title $newtitle, User $user)
+    {
+        global $wgCTExtName, $wgRequest;
 
-    // Skip antispam test if user is member of special group
-    if ( $user->isAllowed('cleantalk-bypass') ) {
-        return;
-    }
-    $errors = [];
+        // Skip antispam test if user is member of special group
+        if ( $user->isAllowed('cleantalk-bypass') ) {
+            return;
+        }
+        $errors = [];
 
-    //collect message
-    $page_chunk = '';
-    $reason = '';
-    if (method_exists($newtitle, 'getPartialURL')) {
-        $page_chunk = $newtitle->getPartialURL();
-    }
-    if (method_exists($wgRequest, 'getVal')) {
-        $reason = $wgRequest->getVal('wpReason');
-        $reason = empty($reason) ? '' : ' ' . $reason;
-    }
-    $msg = $page_chunk . $reason;
+        //collect message
+        $page_chunk = '';
+        $reason = '';
+        if (method_exists($newtitle, 'getPartialURL')) {
+            $page_chunk = $newtitle->getPartialURL();
+        }
+        if (method_exists($wgRequest, 'getVal')) {
+            $reason = $wgRequest->getVal('wpReason');
+            $reason = empty($reason) ? '' : ' ' . $reason;
+        }
+        $msg = $page_chunk . $reason;
 
-    // Check
-    $ctResult = CTBody::onSpamCheck(
-        'check_message',
-        array(
+        // Check
+        $ctResult = CTBody::onSpamCheck(
+            'check_message',
+            array(
             'message'         => $msg,
             'sender_email'    => $user->mEmail,
             'sender_nickname' => $user->mName,
-        )
-    );
-    if ( $ctResult->errno != 0 ) {
-        if(CTBody::JSTest() != 1)
-        {
-            $ctResult->allow = 0;
-            $ctResult->comment = "Forbidden. Please, enable Javascript.";
+            )
+        );
+        if ( $ctResult->errno != 0 ) {
+            if (CTBody::JSTest() != 1) {
+                $ctResult->allow = 0;
+                $ctResult->comment = "Forbidden. Please, enable Javascript.";
+            } else {
+                $ctResult->allow = 1;
+            }
         }
-        else
-        {
-            $ctResult->allow = 1;
+
+        // Disallow edit with CleanTalk comment
+        if ($ctResult->allow == 0) {
+            $errors[] = $ctResult->comment;
+        }
+
+        if ($ctResult->inactive === 1) {
+            CTBody::SendAdminEmail($wgCTExtName, $ctResult->comment);
+        }
+
+        if (count($errors)) {
+            throw new PermissionsError('move', $errors);
         }
     }
-
-    // Disallow edit with CleanTalk comment
-    if ($ctResult->allow == 0) {
-        $errors[] = $ctResult->comment;
-    }
-
-    if ($ctResult->inactive === 1) {
-        CTBody::SendAdminEmail( $wgCTExtName, $ctResult->comment );
-    }
-
-    if (count($errors))
-        throw new PermissionsError( 'move', $errors  );
-}
-    public static function onSkinAfterBottomScripts( $skin, &$text )
+    public static function onSkinAfterBottomScripts($skin, &$text)
     {
         global $wgCTShowLink, $wgCTSFW, $wgCTAccessKey;
 
@@ -261,23 +254,19 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
 
         /* SFW starts */
 
-        if($wgCTSFW && !$dbr->isReadOnly())
-        {
+        if ($wgCTSFW && !$dbr->isReadOnly()) {
             CTBody::createSFWTables();
 
             $sfw = new CleantalkSFW();
 
             $settings = CTBody::ctGetSettings();
 
-            if ( $settings !== false )
-            {
-                if(!isset($settings['lastSFWUpdate']) || ($settings['lastSFWUpdate'] && (time()-$settings['lastSFWUpdate'] > 86400)))
-                {
+            if ( $settings !== false ) {
+                if (!isset($settings['lastSFWUpdate']) || ($settings['lastSFWUpdate'] && (time() - $settings['lastSFWUpdate'] > 86400))) {
                     $sfw->sfw_update($wgCTAccessKey);
                     CTBody::ctWriteSettings('lastSFWUpdate', time());
                 }
-                if (!isset($settings['lastSFWSendLogs']) || ($settings['lastSFWSendLogs'] && (time() - $settings['lastSFWSendLogs'] > 3600)))
-                {
+                if (!isset($settings['lastSFWSendLogs']) || ($settings['lastSFWSendLogs'] && (time() - $settings['lastSFWSendLogs'] > 3600))) {
                     $sfw->send_logs($wgCTAccessKey);
                     CTBody::ctWriteSettings('lastSFWSendLogs', time());
                 }
@@ -287,24 +276,19 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
                 $is_sfw_check = true;
                 $sfw->ip_array = (array)CleantalkSFW::ip_get(array('real'), true);
 
-                foreach($sfw->ip_array as $key => $value)
-                {
-                    if(isset($_COOKIE['apbct_sfw_pass_key']) && $_COOKIE['apbct_sfw_pass_key'] == md5($value . $wgCTAccessKey))
-                    {
-                        $is_sfw_check=false;
-                        if( isset($_COOKIE['apbct_sfw_passed']) && ! headers_sent() )
-                        {
-                            CTBody::apbct_cookie__set( 'apbct_sfw_passed', '0', time()+86400*3, '/', $_SERVER['HTTP_HOST'], false, true, 'Lax' );
+                foreach ($sfw->ip_array as $key => $value) {
+                    if (isset($_COOKIE['apbct_sfw_pass_key']) && $_COOKIE['apbct_sfw_pass_key'] == md5($value . $wgCTAccessKey)) {
+                        $is_sfw_check = false;
+                        if ( isset($_COOKIE['apbct_sfw_passed']) && ! headers_sent() ) {
+                            CTBody::apbct_cookie__set('apbct_sfw_passed', '0', time() + 86400 * 3, '/', $_SERVER['HTTP_HOST'], false, true, 'Lax');
                             $sfw->sfw_update_logs($value, 'passed');
                         }
                     }
                 } unset($key, $value);
 
-                if($is_sfw_check)
-                {
+                if ($is_sfw_check) {
                     $sfw->check_ip();
-                    if($sfw->result)
-                    {
+                    if ($sfw->result) {
                         $sfw->sfw_update_logs($sfw->blocked_ip, 'blocked');
                         $sfw->sfw_die($wgCTAccessKey);
                     }
@@ -315,9 +299,8 @@ public static function onTitleMove( Title $title, Title $newtitle, User $user )
 
         /* SFW ends */
 
-        if($wgCTShowLink && strpos($text, 'blocked by CleanTalk') === false)
-        {
-            $text.="<div style='width:100%;text-align:center;display: flow-root;'><a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.</div>";
+        if ($wgCTShowLink && strpos($text, 'blocked by CleanTalk') === false) {
+            $text .= "<div style='width:100%;text-align:center;display: flow-root;'><a href='https://cleantalk.org'>MediaWiki spam</a> blocked by CleanTalk.</div>";
         }
         return true;
     }

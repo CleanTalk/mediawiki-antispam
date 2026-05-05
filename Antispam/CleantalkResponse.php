@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Cleantalk Response class
  *
@@ -14,7 +15,6 @@
 
 class CleantalkResponse
 {
-
     /**
      * Received feedback nubmer
      * @var int
@@ -63,7 +63,7 @@ class CleantalkResponse
      */
     public $errstr = null;
 
-	/**
+    /**
      * Error string
      * @var string
      */
@@ -111,7 +111,7 @@ class CleantalkResponse
      */
     public $sms_error_text = null;
 
-	/**
+    /**
      * Stop queue message, 1|0
      * @var int
      */
@@ -135,7 +135,8 @@ class CleantalkResponse
      * @param type $response
      * @param type $obj
      */
-    function __construct($response = null, $obj = null) {
+    public function __construct($response = null, $obj = null)
+    {
         if ($response && is_array($response) && count($response) > 0) {
             foreach ($response as $param => $value) {
                 $this->{$param} = $value;
@@ -143,7 +144,7 @@ class CleantalkResponse
         } else {
             $this->errno = $obj->errno;
             $this->errstr = $obj->errstr;
-			$this->curl_err = !empty($obj->curl_err) ? $obj->curl_err : false;
+            $this->curl_err = !empty($obj->curl_err) ? $obj->curl_err : false;
 
             if (!is_null($this->errstr)) {
                 $this->errstr = preg_replace("/.+(\*\*\*.+\*\*\*).+/", "$1", $this->errstr);
@@ -164,10 +165,11 @@ class CleantalkResponse
             $this->stop_queue = (isset($obj->stop_queue)) ? $obj->stop_queue : 0;
             $this->inactive = (isset($obj->inactive)) ? $obj->inactive : 0;
             $this->account_status = (isset($obj->account_status)) ? $obj->account_status : -1;
-			$this->received = (isset($obj->received)) ? $obj->received : -1;
+            $this->received = (isset($obj->received)) ? $obj->received : -1;
 
-            if ($this->errno !== 0 && $this->errstr !== null && $this->comment === null)
+            if ($this->errno !== 0 && $this->errstr !== null && $this->comment === null) {
                 $this->comment = '*** ' . $this->errstr . ' Antispam service cleantalk.org ***';
+            }
         }
     }
 }
