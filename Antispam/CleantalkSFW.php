@@ -14,18 +14,13 @@ require_once('Antispam.body.php');
 
 class CleantalkSFW extends CleantalkHelper
 {
-    public $ip = 0;
-    public $ip_str = '';
     public $ip_array = array();
-    public $ip_str_array = array();
     public $blocked_ip = '';
-    public $passed_ip = '';
     public $result = false;
 
     //Database variables
     private $table_prefix;
     private $db;
-    private $query;
     private $db_result;
     private $db_result_data = array();
 
@@ -35,13 +30,9 @@ class CleantalkSFW extends CleantalkHelper
         $this->db = CTBody::getDBHandler();
     }
 
-    public function unversal_query($query, $straight_query = false)
+    public function unversal_query($query)
     {
-        if ($straight_query) {
-            $this->db_result = $this->db->query($query);
-        } else {
-            $this->query = $query;
-        }
+        $this->db_result = $this->db->query($query);
     }
 
     public function unversal_fetch()
@@ -54,11 +45,6 @@ class CleantalkSFW extends CleantalkHelper
         while ($row = $this->db_result->fetchRow()) {
             $this->db_result_data[] = $row;
         }
-    }
-
-    public function get_db_result_data()
-    {
-        return $this->db_result_data;
     }
 
 
@@ -93,14 +79,12 @@ class CleantalkSFW extends CleantalkHelper
 				COUNT(network) AS cnt
 				FROM " . $this->table_prefix . "cleantalk_sfw
 				WHERE network = " . sprintf("%u", ip2long($current_ip)) . " & mask";
-            $this->unversal_query($query, true);
+            $this->unversal_query($query);
             $this->unversal_fetch();
 
             if ($this->db_result_data['cnt']) {
                 $this->result = true;
                 $this->blocked_ip = $current_ip;
-            } else {
-                $this->passed_ip = $current_ip;
             }
         }
     }
@@ -130,7 +114,7 @@ class CleantalkSFW extends CleantalkHelper
 			blocked_entries = blocked_entries" . strval($blocked) . ",
 			entries_timestamp = '" . intval($time) . "'";
 
-        $this->unversal_query($query, true);
+        $this->unversal_query($query);
     }
 
     /*
@@ -144,7 +128,7 @@ class CleantalkSFW extends CleantalkHelper
         $result = self::api_method__get_2s_blacklists_db($ct_key);
 
         if (empty($result['error'])) {
-            $this->unversal_query("TRUNCATE TABLE " . $this->table_prefix . "cleantalk_sfw", true);
+            $this->unversal_query("TRUNCATE TABLE " . $this->table_prefix . "cleantalk_sfw");
 
             // Cast result to int
             foreach ($result as $value) {
@@ -160,7 +144,7 @@ class CleantalkSFW extends CleantalkHelper
                     $query .= "(" . $result[$i][0] . "," . $result[$i][1] . "), ";
                 }
             }
-            $this->unversal_query($query, true);
+            $this->unversal_query($query);
 
             return true;
         } else {
@@ -178,20 +162,26 @@ class CleantalkSFW extends CleantalkHelper
 
         //Getting logs
         $query = "SELECT * FROM " . $this->table_prefix . "cleantalk_sfw_logs";
-        $this->unversal_query($query, true);
+        $this->unversal_query($query);
         $this->unversal_fetch_all();
 
         if (count($this->db_result_data)) {
             //Compile logs
             $data = array();
-            foreach ($this->db_result_data as $key => $value) {
+            foreach ($this->db_result_data as $value) {
                 $ip = isset($value['ip']) ? trim($value['ip']) : '';
                 $all_entries = isset($value['all_entries']) ? $value['all_entries'] : 0;
-                $blocked_entries_diff = isset($value['blocked_entries']) && isset($value['all_entries']) ? $value['all_entries'] - $value['blocked_entries'] : 0;
-                $entries_timestamp = isset($value['entries_timestamp']) ? $value['entries_timestamp'] : time();
+                $blocked_entries = isset($value['blocked_entries']) ? $value['blocked_entries'] : 0;
+                $blocked_entries_diff = isset($value['blocked_entries'], $value['all_entries'])
+                    ? $all_entries - $blocked_entries
+                    : 0;
+                $entries_timestamp = time();
+                if (isset($value['entries_timestamp'])) {
+                    $entries_timestamp = $value['entries_timestamp'];
+                }
                 $data[] = array($ip, $all_entries, $blocked_entries_diff, $entries_timestamp);
             }
-            unset($key, $value);
+            unset($value);
 
             //Sending the request
             $result = self::api_method__sfw_logs($ct_key, $data);
@@ -199,7 +189,7 @@ class CleantalkSFW extends CleantalkHelper
             //Checking answer and deleting all lines from the table
             if (empty($result['error'])) {
                 if ($result['rows'] == count($data)) {
-                    $this->unversal_query("TRUNCATE TABLE " . $this->table_prefix . "cleantalk_sfw_logs", true);
+                    $this->unversal_query("TRUNCATE TABLE " . $this->table_prefix . "cleantalk_sfw_logs");
                     return true;
                 }
             } else {
@@ -215,7 +205,7 @@ class CleantalkSFW extends CleantalkHelper
     *
     * Stops script executing
     */
-    public function sfw_die($api_key, $cookie_prefix = '', $cookie_domain = '')
+    public function sfw_die($api_key)
     {
 
         // File exists?
@@ -227,7 +217,8 @@ class CleantalkSFW extends CleantalkHelper
 
         // Service info
         $sfw_die_page = str_replace('{REMOTE_ADDRESS}', $this->blocked_ip, $sfw_die_page);
-        $sfw_die_page = str_replace('{REQUEST_URI}', $_SERVER['REQUEST_URI'], $sfw_die_page);
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+        $sfw_die_page = str_replace('{REQUEST_URI}', $request_uri, $sfw_die_page);
         $sfw_die_page = str_replace('{SFW_COOKIE}', md5($this->blocked_ip . $api_key), $sfw_die_page);
 
         // Headers
