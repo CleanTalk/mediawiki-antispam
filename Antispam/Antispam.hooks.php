@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @psalm-suppress UnusedClass Registered via Hooks in extension.json
+ */
 class CTHooks
 {
     /**
@@ -7,7 +10,7 @@ class CTHooks
      * UploadBase $upload
      * string $mime
      * bool|array $error
-     * @return none
+     * @return void
      */
     public static function onUploadFilter($upload, $mime, &$error)
     {
@@ -197,11 +200,8 @@ class CTHooks
         $errors = [];
 
         //collect message
-        $page_chunk = '';
+        $page_chunk = $newtitle->getPartialURL();
         $reason = '';
-        if (method_exists($newtitle, 'getPartialURL')) {
-            $page_chunk = $newtitle->getPartialURL();
-        }
         if (method_exists($wgRequest, 'getVal')) {
             $reason = $wgRequest->getVal('wpReason');
             $reason = empty($reason) ? '' : ' ' . $reason;
@@ -275,16 +275,17 @@ class CTHooks
 
                 $is_sfw_check = true;
                 $sfw->ip_array = (array)CleantalkSFW::ip_get(array('real'), true);
+                $http_host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
 
-                foreach ($sfw->ip_array as $key => $value) {
+                foreach ($sfw->ip_array as $value) {
                     if (isset($_COOKIE['apbct_sfw_pass_key']) && $_COOKIE['apbct_sfw_pass_key'] == md5($value . $wgCTAccessKey)) {
                         $is_sfw_check = false;
                         if ( isset($_COOKIE['apbct_sfw_passed']) && ! headers_sent() ) {
-                            CTBody::apbct_cookie__set('apbct_sfw_passed', '0', time() + 86400 * 3, '/', $_SERVER['HTTP_HOST'], false, true, 'Lax');
+                            CTBody::apbct_cookie__set('apbct_sfw_passed', '0', time() + 86400 * 3, '/', $http_host, false, true, 'Lax');
                             $sfw->sfw_update_logs($value, 'passed');
                         }
                     }
-                } unset($key, $value);
+                } unset($value);
 
                 if ($is_sfw_check) {
                     $sfw->check_ip();

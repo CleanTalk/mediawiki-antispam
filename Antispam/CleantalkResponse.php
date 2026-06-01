@@ -106,8 +106,8 @@ class CleantalkResponse
     public $sms_error_code = null;
 
     /**
-     * Sms error code
-     * @var type
+     * Sms error text
+     * @var string|null
      */
     public $sms_error_text = null;
 
@@ -132,8 +132,8 @@ class CleantalkResponse
     /**
      * Create server response
      *
-     * @param type $response
-     * @param type $obj
+     * @param array|null $response
+     * @param object|null $obj
      */
     public function __construct($response = null, $obj = null)
     {
@@ -141,7 +141,7 @@ class CleantalkResponse
             foreach ($response as $param => $value) {
                 $this->{$param} = $value;
             }
-        } else {
+        } elseif (is_object($obj)) {
             $this->errno = $obj->errno;
             $this->errstr = $obj->errstr;
             $this->curl_err = !empty($obj->curl_err) ? $obj->curl_err : false;

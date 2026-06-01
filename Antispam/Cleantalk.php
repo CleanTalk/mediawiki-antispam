@@ -19,12 +19,6 @@ require_once('CleantalkResponse.php');
 class Cleantalk
 {
     /**
-     * Debug level
-     * @var int
-     */
-    public $debug = 0;
-
-    /**
     * Maximum data size in bytes
     * @var int
     */
@@ -44,33 +38,27 @@ class Cleantalk
 
     /**
      * Cleantalk server url
-     * @var string
+     * @var string|null
      */
     public $server_url = null;
 
     /**
      * Last work url
-     * @var string
+     * @var string|null
      */
     public $work_url = null;
 
     /**
      * WOrk url ttl
-     * @var int
+     * @var int|null
      */
     public $server_ttl = null;
 
     /**
      * Time wotk_url changer
-     * @var int
+     * @var int|null
      */
     public $server_changed = null;
-
-    /**
-     * Flag is change server url
-     * @var bool
-     */
-    public $server_change = false;
 
     /**
      * Use TRUE when need stay on server. Example: send feedback
@@ -80,7 +68,7 @@ class Cleantalk
 
     /**
      * Codepage of the data
-     * @var bool
+     * @var string|null
      */
     public $data_codepage = null;
 
@@ -97,12 +85,6 @@ class Cleantalk
     public $ssl_on = false;
 
     /**
-     * Path to SSL certificate
-     * @var string
-     */
-    public $ssl_path = '';
-
-    /**
      * Minimal server response in miliseconds to catch the server
      *
      */
@@ -111,7 +93,7 @@ class Cleantalk
     /**
      * Function checks whether it is possible to publish the message
      * @param CleantalkRequest $request
-     * @return type
+     * @return CleantalkResponse|bool
      */
     public function isAllowMessage(CleantalkRequest $request)
     {
@@ -123,7 +105,7 @@ class Cleantalk
     /**
      * Function checks whether it is possible to publish the message
      * @param CleantalkRequest $request
-     * @return type
+     * @return CleantalkResponse|bool
      */
     public function isAllowUser(CleantalkRequest $request)
     {
@@ -136,7 +118,7 @@ class Cleantalk
      * Function sends the results of manual moderation
      *
      * @param CleantalkRequest $request
-     * @return type
+     * @return CleantalkResponse|bool
      */
     public function sendFeedback(CleantalkRequest $request)
     {
@@ -148,7 +130,7 @@ class Cleantalk
     /**
      *  Filter request params
      * @param CleantalkRequest $request
-     * @return type
+     * @return CleantalkRequest
      */
     private function filterRequest(CleantalkRequest $request)
     {
@@ -196,11 +178,14 @@ class Cleantalk
 
     /**
      * Compress data and encode to base64
-     * @param type string
-     * @return string
+     * @param string|null $data
+     * @return string|null
      */
     private function compressData($data = null)
     {
+        if ($data === null) {
+            return null;
+        }
 
         if (strlen($data) > $this->dataMaxSise && function_exists('gzencode') && function_exists('base64_encode')) {
             $localData = gzencode($data, $this->compressRate, FORCE_GZIP);
@@ -223,9 +208,9 @@ class Cleantalk
 
     /**
      * Create msg for cleantalk server
-     * @param type $method
+     * @param string $method
      * @param CleantalkRequest $request
-     * @return \xmlrpcmsg
+     * @return CleantalkRequest
      */
     private function createMsg($method, CleantalkRequest $request)
     {
@@ -345,7 +330,7 @@ class Cleantalk
 
         if (!$result) {
             $allow_url_fopen = ini_get('allow_url_fopen');
-            if (function_exists('file_get_contents') && isset($allow_url_fopen) && $allow_url_fopen == '1') {
+            if (function_exists('file_get_contents') && $allow_url_fopen == '1') {
                 $opts = array('http' =>
                   array(
                     'method'  => 'POST',
@@ -360,7 +345,7 @@ class Cleantalk
             }
         }
 
-        if (!$result || !self::cleantalk_is_JSON($result)) {
+        if (!is_string($result) || !$result || !self::cleantalk_is_JSON($result)) {
             $response = null;
             $response['errno'] = 1;
             $response['errstr'] = true;
@@ -372,7 +357,7 @@ class Cleantalk
 
         $errstr = null;
         $response = json_decode($result);
-        if ($result !== false && is_object($response)) {
+        if (is_object($response)) {
             $response->errno = 0;
             $response->errstr = $errstr;
         } else {
@@ -425,7 +410,7 @@ class Cleantalk
 
         $si = (array)json_decode($msg->sender_info, true);
 
-        $si['remote_addr'] = $_SERVER['REMOTE_ADDR'];
+        $si['remote_addr'] = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
         if (isset($_SERVER['X_FORWARDED_FOR'])) {
             $msg->x_forwarded_for = $_SERVER['X_FORWARDED_FOR'];
         }
@@ -441,9 +426,10 @@ class Cleantalk
             $result = $this->sendRequest($msg, $url, $this->server_timeout);
         }
 
-        if (($result === false || $result->errno != 0) && $this->stay_on_server == false) {
+        if ((!is_object($result) || $result->errno != 0) && $this->stay_on_server == false) {
             // Split server url to parts
-            preg_match("@^(https?://)([^/:]+)(.*)@i", $this->server_url, $matches);
+            $server_url = !empty($this->server_url) ? $this->server_url : '';
+            preg_match("@^(https?://)([^/:]+)(.*)@i", $server_url, $matches);
             $url_prefix = '';
             if (isset($matches[1])) {
                 $url_prefix = $matches[1];
@@ -485,15 +471,14 @@ class Cleantalk
 
                     $result = $this->sendRequest($msg, $this->work_url, $this->server_timeout);
 
-                    if ($result !== false && $result->errno === 0) {
-                        $this->server_change = true;
+                    if (is_object($result) && $result->errno === 0) {
                         break;
                     }
                 }
             }
         }
 
-        $response = new CleantalkResponse(null, $result);
+        $response = new CleantalkResponse(null, is_object($result) ? $result : null);
 
         if (!empty($this->data_codepage) && $this->data_codepage !== 'UTF-8') {
             if (!empty($response->comment)) {
@@ -512,8 +497,8 @@ class Cleantalk
 
     /**
      * Function DNS request
-     * @param $host
-     * @return array
+     * @param string|null $host
+     * @return array|null
      */
     public function get_servers_ip($host)
     {

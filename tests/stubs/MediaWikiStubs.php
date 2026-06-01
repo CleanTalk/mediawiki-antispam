@@ -151,6 +151,23 @@ class PermissionsError extends \Exception
     }
 }
 
+/** @var string $wgCTAccessKey */
+/** @var bool $wgCTCheckNoConnect */
+/** @var string $wgCTServerURL */
+/** @var string $wgCTAgent */
+/** @var string $wgCTExtName */
+/** @var int $wgCTAdminAccountId */
+/** @var int $wgCTAdminNotificaionInteval */
+/** @var bool $wgCTShowLink */
+/** @var bool $wgCTSFW */
+/** @var bool $wgCTNewEditsOnly */
+/** @var int $wgCTMinEditCount */
+/** @var string|null $wgCTDataStoreFile */
+/** @var array<string, list<array<string, mixed>>> $wgExtensionCredits */
+/** @var array<string, string> $wgAutoloadClasses */
+/** @var array<string, list<string>> $wgHooks */
+/** @var array<string, array<string, bool>> $wgGroupPermissions */
+
 /** @param int $index */
 function wfGetDB($index)
 {

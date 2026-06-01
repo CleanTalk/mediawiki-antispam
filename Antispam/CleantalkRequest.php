@@ -37,13 +37,13 @@ class CleantalkRequest
 
     /**
      * User message
-     * @var string
+     * @var string|null
      */
     public $message = null;
 
     /**
      * Post example with last comments
-     * @var string
+     * @var string|null
      */
     public $example = null;
 
@@ -81,7 +81,7 @@ class CleantalkRequest
 
     /**
      * User email
-     * @var strings
+     * @var string|null
      */
     public $sender_email = null;
 
