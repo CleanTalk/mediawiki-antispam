@@ -581,8 +581,8 @@ class Cleantalk
 
     /**
     * Function to check response time
-    * param string
-    * @return int
+    * @param string|null $host
+    * @return float|int
     */
     public function httpPing($host)
     {
