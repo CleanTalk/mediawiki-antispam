@@ -453,7 +453,11 @@ class Cleantalk
                 return false;
             } else {
                 // Loop until find work server
-                foreach ($this->get_servers_ip($pool) as $server) {
+                $servers = $this->get_servers_ip($pool);
+                if (!is_array($servers)) {
+                    return false;
+                }
+                foreach ($servers as $server) {
                     if ($server['host'] === 'localhost' || $server['ip'] === null) {
                         $work_url = $server['host'];
                     } else {
@@ -507,12 +511,18 @@ class Cleantalk
             return $response;
         }
 
+        $response = array();
+
         if (function_exists('dns_get_record')) {
             $records = @dns_get_record($host, DNS_A);
 
             if ($records !== false) {
                 foreach ($records as $server) {
-                    $response[] = $server;
+                    $response[] = array(
+                        'ip' => isset($server['ip']) ? $server['ip'] : null,
+                        'host' => $host,
+                        'ttl' => isset($server['ttl']) ? $server['ttl'] : $this->server_ttl,
+                    );
                 }
             }
         }
@@ -539,7 +549,7 @@ class Cleantalk
         } else {
             // $i - to resolve collisions with localhost
             $i = 0;
-            $r_temp = null;
+            $r_temp = array();
             $fast_server_found = false;
             foreach ($response as $server) {
                 // Do not test servers because fast work server found
@@ -560,80 +570,13 @@ class Cleantalk
                     $fast_server_found = true;
                 }
             }
-            if (count($r_temp)) {
+            if (!empty($r_temp)) {
                 ksort($r_temp);
                 $response = $r_temp;
             }
         }
 
         return $response;
-    }
-
-    /**
-     * Function to get the message hash from Cleantalk.ru comment
-     * @param $message
-     * @return null
-     */
-    public function getCleantalkCommentHash($message)
-    {
-        $matches = array();
-        if (preg_match('/\n\n\*\*\*.+([a-z0-9]{32}).+\*\*\*$/', $message, $matches)) {
-            return $matches[1];
-        } else if (preg_match('/\<br.*\>[\n]{0,1}\<br.*\>[\n]{0,1}\*\*\*.+([a-z0-9]{32}).+\*\*\*$/', $message, $matches)) {
-            return $matches[1];
-        }
-
-        return null;
-    }
-
-    /**
-     * Function adds to the post comment Cleantalk.ru
-     * @param $message
-     * @param $comment
-     * @return string
-     */
-    public function addCleantalkComment($message, $comment)
-    {
-        $comment = preg_match('/\*\*\*(.+)\*\*\*/', $comment, $matches) ? $comment : '*** ' . $comment . ' ***';
-        return $message . "\n\n" . $comment;
-    }
-
-    /**
-     * Function deletes the comment Cleantalk.ru
-     * @param $message
-     * @return mixed
-     */
-    public function delCleantalkComment($message)
-    {
-        $message = preg_replace('/\n\n\*\*\*.+\*\*\*$/', '', $message);
-
-        // DLE sign cut
-        $message = preg_replace('/<br\s?\/><br\s?\/>\*\*\*.+\*\*\*$/', '', $message);
-
-        $message = preg_replace('/\<br.*\>[\n]{0,1}\<br.*\>[\n]{0,1}\*\*\*.+\*\*\*$/', '', $message);
-
-        return $message;
-    }
-
-    /**
-    *   Get user IP behind proxy server
-    */
-    public function ct_session_ip($data_ip)
-    {
-        if (!$data_ip || !preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/", $data_ip)) {
-            return $data_ip;
-        }
-
-        return self::cleantalk_get_real_ip();
-    }
-
-    /**
-    * From http://php.net/manual/en/function.ip2long.php#82397
-    */
-    public function net_match($CIDR, $IP)
-    {
-        list ($net, $mask) = explode('/', $CIDR);
-        return ( ip2long($IP) & ~((1 << (32 - $mask)) - 1) ) == ip2long($net);
     }
 
     /**
@@ -700,39 +643,6 @@ class Cleantalk
         }
 
         return $str;
-    }
-
-    public static function cleantalk_get_real_ip()
-    {
-
-        $headers = function_exists('apache_request_headers')
-            ? apache_request_headers()
-            : self::apache_request_headers();
-
-        // Getting IP for validating
-        if (array_key_exists('X-Forwarded-For', $headers)) {
-            $ip = explode(",", trim($headers['X-Forwarded-For']));
-            $ip = trim($ip[0]);
-        } elseif (array_key_exists('HTTP_X_FORWARDED_FOR', $headers)) {
-            $ip = explode(",", trim($headers['HTTP_X_FORWARDED_FOR']));
-            $ip = trim($ip[0]);
-        } else {
-            $ip = $_SERVER['REMOTE_ADDR'];
-        }
-
-        // Validating IP
-        // IPv4
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            $the_ip = $ip;
-            // IPv6
-        } elseif (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            $the_ip = $ip;
-            // Unknown
-        } else {
-            $the_ip = null;
-        }
-
-        return $the_ip;
     }
 
     public static function cleantalk_is_JSON($string)
