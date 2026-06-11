@@ -57,132 +57,145 @@ namespace Wikimedia\Rdbms {
     }
 }
 
-class User
-{
-    /** @var string */
-    public $mEmail;
+namespace {
 
-    /** @var string */
-    public $mName;
-
-    /** @return self */
-    public static function newFromId($id)
+    class User
     {
+        /** @var string */
+        public $mEmail;
+
+        /** @var string */
+        public $mName;
+
+        /** @return self */
+        public static function newFromId($id)
+        {
+        }
+
+        /** @return Status */
+        public function sendMail($title, $body)
+        {
+        }
+
+        /** @return bool */
+        public function isAllowed($permission)
+        {
+        }
+
+        /** @return int */
+        public function getEditCount()
+        {
+        }
     }
 
-    /** @return Status */
-    public function sendMail($title, $body)
+    class Status
     {
+        /** @return self */
+        public static function newFatal($message)
+        {
+        }
+
+        /** @return self */
+        public static function newGood()
+        {
+        }
+
+        /** @return bool */
+        public function isGood()
+        {
+        }
     }
 
-    /** @return bool */
-    public function isAllowed($permission)
+    class RequestContext
     {
+        /** @return self */
+        public static function getMain()
+        {
+        }
+
+        /** @return User */
+        public function getUser()
+        {
+        }
     }
 
-    /** @return int */
-    public function getEditCount()
+    class Html
     {
-    }
-}
+        /** @return string */
+        public static function openElement($tag, $attrs = array())
+        {
+        }
 
-class Status
-{
-    /** @return self */
-    public static function newFatal($message)
-    {
-    }
+        /** @return string */
+        public static function closeElement($tag)
+        {
+        }
 
-    /** @return self */
-    public static function newGood()
-    {
-    }
-
-    /** @return bool */
-    public function isGood()
-    {
-    }
-}
-
-class RequestContext
-{
-    /** @return self */
-    public static function getMain()
-    {
+        /** @return string */
+        public static function element($tag, $attrs = array())
+        {
+        }
     }
 
-    /** @return User */
-    public function getUser()
+    class Title
     {
-    }
-}
-
-class Html
-{
-    /** @return string */
-    public static function openElement($tag, $attrs = array())
-    {
+        /** @return string */
+        public function getPartialURL()
+        {
+        }
     }
 
-    /** @return string */
-    public static function closeElement($tag)
+    class PermissionsError extends \Exception
     {
+        /** @param string $action @param array $errors */
+        public function __construct($action, $errors)
+        {
+        }
     }
 
-    /** @return string */
-    public static function element($tag, $attrs = array())
-    {
+
+    /** @var string $wgCTAccessKey */
+    /** @var bool $wgCTCheckNoConnect */
+    /** @var string $wgCTServerURL */
+    /** @var string $wgCTAgent */
+    /** @var string $wgCTExtName */
+    /** @var int $wgCTAdminAccountId */
+    /** @var int $wgCTAdminNotificaionInteval */
+    /** @var bool $wgCTShowLink */
+    /** @var bool $wgCTSFW */
+    /** @var bool $wgCTNewEditsOnly */
+    /** @var int $wgCTMinEditCount */
+    /** @var string|null $wgCTDataStoreFile */
+    /** @var array<string, list<array<string, mixed>>> $wgExtensionCredits */
+    /** @var array<string, string> $wgAutoloadClasses */
+    /** @var array<string, list<string>> $wgHooks */
+    /** @var array<string, array<string, bool>> $wgGroupPermissions */
+
+    /** @param int $index */
+    if ( !function_exists('wfGetDB') ) {
+        function wfGetDB($index){}
     }
-}
 
-class Title
-{
-    /** @return string */
-    public function getPartialURL()
-    {
+
+    /**
+     * @param string $name
+     * @param string $value
+     * @param int|array{expires?: int, path?: string, domain?: string|null, secure?: bool, httponly?: bool, samesite?: string} $expires_or_options
+     * @param string $path
+     * @param string|null $domain
+     * @param bool $secure
+     * @param bool $httponly
+     * @return bool
+     */
+    if ( !function_exists('setcookie') ) {
+        function setcookie(
+            $name,
+            $value = '',
+            $expires_or_options = 0,
+            $path = '',
+            $domain = '',
+            $secure = false,
+            $httponly = false
+        ) {}
     }
-}
-
-class PermissionsError extends \Exception
-{
-    /** @param string $action @param array $errors */
-    public function __construct($action, $errors)
-    {
-    }
-}
-
-/** @var string $wgCTAccessKey */
-/** @var bool $wgCTCheckNoConnect */
-/** @var string $wgCTServerURL */
-/** @var string $wgCTAgent */
-/** @var string $wgCTExtName */
-/** @var int $wgCTAdminAccountId */
-/** @var int $wgCTAdminNotificaionInteval */
-/** @var bool $wgCTShowLink */
-/** @var bool $wgCTSFW */
-/** @var bool $wgCTNewEditsOnly */
-/** @var int $wgCTMinEditCount */
-/** @var string|null $wgCTDataStoreFile */
-/** @var array<string, list<array<string, mixed>>> $wgExtensionCredits */
-/** @var array<string, string> $wgAutoloadClasses */
-/** @var array<string, list<string>> $wgHooks */
-/** @var array<string, array<string, bool>> $wgGroupPermissions */
-
-/** @param int $index */
-function wfGetDB($index)
-{
-}
-
-/**
- * @param string $name
- * @param string $value
- * @param int|array{expires?: int, path?: string, domain?: string|null, secure?: bool, httponly?: bool, samesite?: string} $expires_or_options
- * @param string $path
- * @param string|null $domain
- * @param bool $secure
- * @param bool $httponly
- * @return bool
- */
-function setcookie($name, $value = '', $expires_or_options = 0, $path = '', $domain = '', $secure = false, $httponly = false)
-{
 }
