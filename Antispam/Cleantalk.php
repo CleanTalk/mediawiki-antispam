@@ -2,6 +2,7 @@
 
 require_once('CleantalkRequest.php');
 require_once('CleantalkResponse.php');
+require_once('CleantalkHelper.php');
 
 /**
  * Cleantalk Base class
@@ -345,7 +346,7 @@ class Cleantalk
             }
         }
 
-        if (!is_string($result) || !$result || !self::cleantalk_is_JSON($result)) {
+        if (!is_string($result) || !$result || !CleantalkHelper::isJson($result)) {
             $response = null;
             $response['errno'] = 1;
             $response['errstr'] = true;
@@ -645,11 +646,6 @@ class Cleantalk
         }
 
         return $str;
-    }
-
-    public static function cleantalk_is_JSON($string)
-    {
-        return ((is_string($string) && (is_object(json_decode($string)) || is_array(json_decode($string))))) ? true : false;
     }
 
     /*
