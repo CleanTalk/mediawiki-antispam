@@ -1,1 +1,3 @@
 <?php
+
+define('MEDIAWIKI', true );

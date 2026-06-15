@@ -2,6 +2,9 @@
 
 use MediaWiki\Auth\AbstractPreAuthenticationProvider;
 
+/**
+ * @psalm-suppress UnusedClass Registered via AuthManagerAutoConfig in extension.json
+ */
 class CTAuth extends AbstractPreAuthenticationProvider
 {
     public function testForAccountCreation($user, $creator, array $reqs)

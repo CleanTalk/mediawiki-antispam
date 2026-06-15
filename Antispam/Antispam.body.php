@@ -45,6 +45,8 @@ class CTBody
             return;
         }
 
+        $http_host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+
         // Cookie names to validate
         $cookie_test_value = array(
             'cookies_names' => array(),
@@ -53,14 +55,14 @@ class CTBody
 
         // Pervious referer
         if (!empty($_SERVER['HTTP_REFERER'])) {
-            self::apbct_cookie__set('ct_prev_referer', $_SERVER['HTTP_REFERER'], 0, '/', $_SERVER['HTTP_HOST'], false, true, 'Lax');
+            self::apbct_cookie__set('ct_prev_referer', $_SERVER['HTTP_REFERER'], 0, '/', $http_host, false, true, 'Lax');
             $cookie_test_value['cookies_names'][] = 'ct_prev_referer';
             $cookie_test_value['check_value'] .= $_SERVER['HTTP_REFERER'];
         }
 
         // Cookies test
         $cookie_test_value['check_value'] = md5($cookie_test_value['check_value']);
-        self::apbct_cookie__set('ct_cookies_test', json_encode($cookie_test_value), 0, '/', $_SERVER['HTTP_HOST'], false, true, 'Lax');
+        self::apbct_cookie__set('ct_cookies_test', json_encode($cookie_test_value), 0, '/', $http_host, false, true, 'Lax');
     }
     public static function ctTestCookie()
     {
@@ -71,7 +73,7 @@ class CTBody
             $check_srting = $wgCTAccessKey;
             foreach ($cookie_test['cookies_names'] as $cookie_name) {
                 $check_srting .= isset($_COOKIE[$cookie_name]) ? $_COOKIE[$cookie_name] : '';
-            } unset($cokie_name);
+            } unset($cookie_name);
 
             if ($cookie_test['check_value'] == md5($check_srting)) {
                 return 1;
@@ -126,8 +128,6 @@ class CTBody
     {
         global $wgCTAccessKey, $wgCTServerURL, $wgCTAgent;
 
-        $result = null;
-
         $ct = new Cleantalk();
         $ct->server_url = $wgCTServerURL;
 
@@ -143,11 +143,15 @@ class CTBody
         $ct_request->x_forwarded_for = CleantalkHelper::ip_get(array('x_forwarded_for'), false);
         $ct_request->x_real_ip       = CleantalkHelper::ip_get(array('x_real_ip'), false);
         $ct_request->js_on = CTBody::JSTest();
+        $server_name = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+        $http_referer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+        $http_user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
         $ct_request->sender_info = json_encode(
             array(
-            'page_url' => htmlspecialchars(@$_SERVER['SERVER_NAME'] . @$_SERVER['REQUEST_URI']),
-            'REFFERRER' => $_SERVER['HTTP_REFERER'],
-            'USER_AGENT' => $_SERVER['HTTP_USER_AGENT'],
+            'page_url' => htmlspecialchars($server_name . $request_uri),
+            'REFFERRER' => $http_referer,
+            'USER_AGENT' => $http_user_agent,
             'cookies_enabled' => CTBody::ctTestCookie(),
             'REFFERRER_PREVIOUS' => isset($_COOKIE['ct_prev_referer']) ? $_COOKIE['ct_prev_referer'] : 0,
             'mouse_cursor_positions' => isset($_COOKIE['ct_pointer_data'])          ? json_decode(stripslashes($_COOKIE['ct_pointer_data']), true) : null,
@@ -158,18 +162,14 @@ class CTBody
         );
         switch ($method) {
             case 'check_message':
-                $result = $ct->isAllowMessage($ct_request);
-                break;
+                return $ct->isAllowMessage($ct_request);
             case 'send_feedback':
-                $result = $ct->sendFeedback($ct_request);
-                break;
+                return $ct->sendFeedback($ct_request);
             case 'check_newuser':
-                $result = $ct->isAllowUser($ct_request);
-                break;
+                return $ct->isAllowUser($ct_request);
             default:
                 return null;
         }
-        return $result;
     }
     /**
      * Adds hidden field to form for JavaScript test
@@ -268,7 +268,6 @@ class CTBody
 
     /**
      * Sends email notificatioins to admins
-     * @return bool
      */
     public static function SendAdminEmail($title, $body) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
@@ -282,7 +281,7 @@ class CTBody
             }
             // Skip notification if permitted interval doesn't exhaust
             if ( isset($settings['lastAdminNotificaionSent']) && time() - $settings['lastAdminNotificaionSent'] < $wgCTAdminNotificaionInteval ) {
-                return false;
+                return;
             }
 
             $u = User::newFromId($wgCTAdminAccountId);
@@ -292,10 +291,7 @@ class CTBody
             if ( $status->isGood() ) {
                 CTBody::ctWriteSettings('lastAdminNotificaionSent', time());
             }
-            return $status->isGood();
         }
-
-        return false;
     }
 
 
@@ -343,24 +339,39 @@ class CTBody
         $dbw->query($set_settings_query);
     }
 
+    /**
+     * Set cookie different against PHP version
+     *
+     * @param $name
+     * @param $value
+     * @param $expires
+     * @param $path
+     * @param $domain
+     * @param $secure
+     * @param $httponly
+     * @param $samesite
+     * @return void
+     *
+     * @psalm-suppress InvalidArgument
+     */
     public static function apbct_cookie__set($name, $value = '', $expires = 0, $path = '/', $domain = null, $secure = false, $httponly = false, $samesite = null) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
 
         // For PHP 7.3+ and above
         if ( version_compare(phpversion(), '7.3.0', '>=') ) {
             $params = array(
-                'expires'  => $expires,
-                'path'     => $path,
-                'domain'   => $domain,
-                'secure'   => $secure,
-                'httponly' => $httponly,
+                'expires'  => (int) $expires,
+                'path'     => (string) $path,
+                'domain'   => $domain !== null ? (string) $domain : null,
+                'secure'   => (bool) $secure,
+                'httponly' => (bool) $httponly,
             );
 
             if ($samesite) {
-                $params['samesite'] = $samesite;
+                $params['samesite'] = (string) $samesite;
             }
 
-            setcookie($name, $value, $params);
+            setcookie($name, (string) $value, $params);
 
         // For PHP 5.6 - 7.2
         } else {
@@ -372,7 +383,7 @@ class CTBody
     {
         global $wgVersion;
         $version = defined('MW_VERSION') ? MW_VERSION : $wgVersion;
-        if ($oldVersion = version_compare($version, '1.31', '>')) {
+        if (version_compare($version, '1.31', '>')) {
             $dbProvider  = MediaWikiServices::getInstance()->getConnectionProvider();
             $dbw = $dbProvider->getPrimaryDatabase();
         } else {
