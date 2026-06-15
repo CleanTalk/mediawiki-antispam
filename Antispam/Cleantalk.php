@@ -179,13 +179,13 @@ class Cleantalk
 
     /**
      * Compress data and encode to base64
-     * @param string|null $data
-     * @return string|null
+     * @param string $data
+     * @return string
      */
-    private function compressData($data = null)
+    private function compressData($data = '')
     {
-        if ($data === null) {
-            return null;
+        if ($data === '') {
+            return '';
         }
 
         if (strlen($data) > $this->dataMaxSise && function_exists('gzencode') && function_exists('base64_encode')) {
@@ -387,7 +387,7 @@ class Cleantalk
         if ($msg->method_name != 'send_feedback') {
             $tmp = function_exists('apache_request_headers')
                 ? apache_request_headers()
-                : self::apache_request_headers();
+                : CleantalkHelper::apache_request_headers();
 
             if (isset($tmp['Cookie'])) {
                 $cookie_name = 'Cookie';
@@ -555,22 +555,24 @@ class Cleantalk
             $r_temp = array();
             $fast_server_found = false;
             foreach ($response as $server) {
-                // Do not test servers because fast work server found
-                if ($fast_server_found) {
-                    $ping = $this->min_server_timeout;
-                } else {
-                    $ping = $this->httpPing($server['ip']);
-                    $ping = $ping * 1000;
-                }
+                if ( isset($server['ip']) ) {
+                    // Do not test servers because fast work server found
+                    if ($fast_server_found) {
+                        $ping = $this->min_server_timeout;
+                    } else {
+                        $ping = $this->httpPing($server['ip']);
+                        $ping = $ping * 1000;
+                    }
 
-                // -1 server is down, skips not reachable server
-                if ($ping != -1) {
-                    $r_temp[(int)$ping + $i] = $server;
-                }
-                $i++;
+                    // -1 server is down, skips not reachable server
+                    if ($ping != -1) {
+                        $r_temp[(int)$ping + $i] = $server;
+                    }
+                    $i++;
 
-                if ($ping < $this->min_server_timeout) {
-                    $fast_server_found = true;
+                    if ($ping < $this->min_server_timeout) {
+                        $fast_server_found = true;
+                    }
                 }
             }
             if (!empty($r_temp)) {
@@ -584,7 +586,7 @@ class Cleantalk
 
     /**
     * Function to check response time
-    * @param string|null $host
+    * @param string $host
     * @return float|int
     */
     public function httpPing($host)
@@ -599,7 +601,6 @@ class Cleantalk
         $starttime = microtime(true);
         $file      = @fsockopen($host, 80, $errno, $errstr, $this->server_timeout);
         $stoptime  = microtime(true);
-        $status    = 0;
         if (!$file) {
             $status = -1;  // Site is down
         } else {
@@ -613,20 +614,20 @@ class Cleantalk
 
     /**
     * Function convert string to UTF8 and removes non UTF8 characters
-    * param string
-    * param string
+    * @param string $str
+    * @param string $data_codepage
     * @return string
     */
     public function stringToUTF8($str, $data_codepage = null)
     {
         if (!preg_match('//u', $str) && function_exists('mb_detect_encoding') && function_exists('mb_convert_encoding')) {
             if ($data_codepage !== null) {
-                return mb_convert_encoding($str, 'UTF-8', $data_codepage);
+                return (string) mb_convert_encoding($str, 'UTF-8', $data_codepage);
             }
 
             $encoding = mb_detect_encoding($str);
             if ($encoding) {
-                return mb_convert_encoding($str, 'UTF-8', $encoding);
+                return (string) mb_convert_encoding($str, 'UTF-8', $encoding);
             }
         }
 
@@ -635,8 +636,8 @@ class Cleantalk
 
     /**
     * Function convert string from UTF8
-    * param string
-    * param string
+    * @param string $str
+    * @param string $data_codepage
     * @return string
     */
     public function stringFromUTF8($str, $data_codepage = null)
@@ -646,30 +647,5 @@ class Cleantalk
         }
 
         return $str;
-    }
-
-    /*
-     * If Apache web server is missing then making
-     * Patch for apache_request_headers()
-     */
-    public static function apache_request_headers()
-    {
-
-        $headers = array();
-        foreach ($_SERVER as $key => $val) {
-            if (preg_match('/\AHTTP_/', $key)) {
-                $server_key = preg_replace('/\AHTTP_/', '', $key);
-                $key_parts = explode('_', $server_key);
-                if (count($key_parts) > 0 and strlen($server_key) > 2) {
-                    foreach ($key_parts as $part_index => $part) {
-                        $key_parts[$part_index] = mb_strtolower($part);
-                        $key_parts[$part_index][0] = strtoupper($key_parts[$part_index][0]);
-                    }
-                    $server_key = implode('-', $key_parts);
-                }
-                $headers[$server_key] = $val;
-            }
-        }
-        return $headers;
     }
 }

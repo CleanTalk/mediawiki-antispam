@@ -11,7 +11,7 @@ class CleantalkRequest
      *  All http request headers
      * @var string
      */
-     public $all_headers;
+     public $all_headers = '';
 
      /**
      *  Last error number
@@ -29,19 +29,19 @@ class CleantalkRequest
      *  Last error text
      * @var string
      */
-     public $last_error_text;
+     public $last_error_text = '';
 
     /**
      * User message
-     * @var string|null
+     * @var string
      */
-    public $message;
+    public $message = '';
 
     /**
      * Post example with last comments
-     * @var string|null
+     * @var string
      */
-    public $example;
+    public $example = '';
 
     /**
      * Auth key
@@ -73,19 +73,19 @@ class CleantalkRequest
      * User IP
      * @var string
      */
-    public $sender_ip;
+    public $sender_ip = '';
 
     /**
      * User email
-     * @var string|null
+     * @var string
      */
-    public $sender_email;
+    public $sender_email = '';
 
     /**
      * User nickname
      * @var string
      */
-    public $sender_nickname;
+    public $sender_nickname = '';
 
     /**
      * Sender info JSON string
