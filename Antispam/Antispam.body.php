@@ -339,6 +339,21 @@ class CTBody
         $dbw->query($set_settings_query);
     }
 
+    /**
+     * Set cookie different against PHP version
+     *
+     * @param $name
+     * @param $value
+     * @param $expires
+     * @param $path
+     * @param $domain
+     * @param $secure
+     * @param $httponly
+     * @param $samesite
+     * @return void
+     *
+     * @psalm-suppress InvalidArgument
+     */
     public static function apbct_cookie__set($name, $value = '', $expires = 0, $path = '/', $domain = null, $secure = false, $httponly = false, $samesite = null) // phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     {
 
