@@ -216,7 +216,7 @@ class CleantalkSFW extends CleantalkHelper
         }
 
         // Service info
-        $sfw_die_page = str_replace('{REMOTE_ADDRESS}', $this->blocked_ip, $sfw_die_page);
+        $sfw_die_page = str_replace('{REMOTE_ADDRESS}', htmlspecialchars($this->blocked_ip, ENT_QUOTES | ENT_HTML5, 'UTF-8'), $sfw_die_page);
         $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
         $sfw_die_page = str_replace('{REQUEST_URI}', $request_uri, $sfw_die_page);
         $sfw_die_page = str_replace('{SFW_COOKIE}', md5($this->blocked_ip . $api_key), $sfw_die_page);
