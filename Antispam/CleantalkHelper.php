@@ -59,10 +59,16 @@ class CleantalkHelper
         '127.0.0.1/32',
     );
 
-    /*
-    *   Getting arrays of IP (REMOTE_ADDR, X-Forwarded-For, X-Real-Ip, Cf_Connecting_Ip)
-    *   reutrns array('remote_addr' => 'val', ['x_forwarded_for' => 'val', ['x_real_ip' => 'val', ['cloud_flare' => 'val']]])
-    */
+    /**
+     * Getting arrays of IP (REMOTE_ADDR, X-Forwarded-For, X-Real-Ip, Cf_Connecting_Ip)
+     *
+     * @param array $ips_input
+     * @param bool $v4_only
+     * @return array|false|mixed|null  example: array('remote_addr' => 'val', ['x_forwarded_for' => 'val', ['x_real_ip' => 'val', ['cloud_flare' => 'val']]])
+     *
+     * @psalm-suppress PossiblyUndefinedStringArrayOffset
+     * @psalm-suppress PossiblyUndefinedArrayOffset
+     */
     public static function ip_get($ips_input = array('real', 'remote_addr', 'x_forwarded_for', 'x_real_ip', 'cloud_flare'), $v4_only = true)
     {
         $ips = array();
@@ -149,11 +155,13 @@ class CleantalkHelper
                 : null);
     }
 
-    /*
-     * Check if the IP belong to mask. Recursivly if array given
-     * @param ip string
-     * @param cird mixed (string|array of strings)
-    */
+    /**
+     * Check if the IP belong to mask. Recursively if array given
+     *
+     * @param $ip string
+     * @param $cidr string|array (string|array of strings)
+     * @return bool
+     */
     public static function ip_mask_match($ip, $cidr)
     {
         if (is_array($cidr)) {
@@ -165,9 +173,12 @@ class CleantalkHelper
             return false;
         }
         $exploded = explode('/', $cidr);
-        $net = $exploded[0];
-        $mask = 4294967295 << (32 - $exploded[1]);
-        return (ip2long($ip) & $mask) == (ip2long($net) & $mask);
+        if ( isset($exploded[0], $exploded[1]) ) {
+            $net = $exploded[0];
+            $mask = 4294967295 << (32 - (int)$exploded[1]);
+            return (ip2long($ip) & $mask) == (ip2long($net) & $mask);
+        }
+        return false;
     }
 
     /*
@@ -230,197 +241,13 @@ class CleantalkHelper
     }
 
     /**
-     * Function gets access key automatically
-     *
-     * @param string website admin email
-     * @param string website host
-     * @param string website platform
-     * @return type
-     */
-    public static function api_method__get_api_key($email, $host, $platform, $agent = null, $timezone = null, $language = null, $ip = null, $do_check = true)
-    {
-        $request = array(
-            'method_name'          => 'get_api_key',
-            'product_name'         => 'antispam',
-            'email'                => $email,
-            'website'              => $host,
-            'platform'             => $platform,
-            'agent'                => $agent,
-            'timezone'             => $timezone,
-            'http_accept_language' => !empty($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : null,
-            'user_ip'              => $ip ? $ip : self::ip_get(array('real'), false),
-        );
-
-        $result = self::api_send_request($request);
-        // $result = $do_check ? self::api_check_response($result, 'get_api_key') : $result;
-
-        return $result;
-    }
-
-    /**
-     * Function gets information about renew notice
-     *
-     * @param string api_key
-     * @return type
-     */
-    public static function api_method__notice_validate_key($api_key, $do_check = true)
-    {
-        $request = array(
-            'method_name' => 'notice_validate_key',
-            'auth_key' => $api_key,
-        );
-
-        $result = self::api_send_request($request);
-        $result = $do_check ? self::api_check_response($result, 'notice_validate_key') : $result;
-
-        return $result;
-    }
-
-    /**
-     * Function gets information about renew notice
-     *
-     * @param string api_key
-     * @return type
-     */
-    public static function api_method__notice_paid_till($api_key, $do_check = true)
-    {
-        $request = array(
-            'method_name' => 'notice_paid_till',
-            'auth_key' => $api_key,
-        );
-
-        $result = self::api_send_request($request);
-        $result = $do_check ? self::api_check_response($result, 'notice_paid_till') : $result;
-
-        return $result;
-    }
-
-    /**
-     * Function gets spam report
-     *
-     * @param string website host
-     * @param integer report days
-     * @return type
-     */
-    public static function api_method__get_antispam_report($host, $period = 1)
-    {
-        $request = array(
-            'method_name' => 'get_antispam_report',
-            'hostname' => $host,
-            'period' => $period,
-        );
-
-        $result = self::api_send_request($request);
-        // $result = $do_check ? self::api_check_response($result, 'get_antispam_report') : $result;
-
-        return $result;
-    }
-
-    /**
-     * Function gets information about account
-     *
-     * @param string api_key
-     * @param string perform check flag
-     * @return mixed (STRING || array('error' => true, 'error_string' => STRING))
-     */
-    public static function api_method__get_account_status($api_key, $do_check = true)
-    {
-        $request = array(
-            'method_name' => 'get_account_status',
-            'auth_key' => $api_key
-        );
-
-        $result = self::api_send_request($request);
-        $result = $do_check ? self::api_check_response($result, 'get_account_status') : $result;
-
-        return $result;
-    }
-
-    /**
-     * Function gets spam statistics
-     *
-     * @param string website host
-     * @param integer report days
-     * @return type
-     */
-    public static function api_method__get_antispam_report_breif($api_key, $do_check = true)
-    {
-
-        $request = array(
-            'method_name' => 'get_antispam_report_breif',
-            'auth_key' => $api_key,
-        );
-
-        $result = self::api_send_request($request);
-        $result = $do_check ? self::api_check_response($result, 'get_antispam_report_breif') : $result;
-
-        $tmp = array();
-        for ( $i = 0; $i < 7; $i++ ) {
-            $tmp[ date('Y-m-d', time() - 86400 * 7 + 86400 * $i) ] = 0;
-        }
-
-        $result['spam_stat']    = array_merge($tmp, isset($result['spam_stat']) ? $result['spam_stat'] : array());
-        $result['top5_spam_ip'] = isset($result['top5_spam_ip']) ? $result['top5_spam_ip'] : array();
-
-        return $result;
-    }
-
-    /**
-     * Function gets spam report
-     *
-     * @param string website host
-     * @param integer report days
-     * @return type
-     */
-    public static function api_method__spam_check_cms($api_key, $data, $date = null, $do_check = true)
-    {
-        $request = array(
-            'method_name' => 'spam_check_cms',
-            'auth_key' => $api_key,
-            'data' => is_array($data) ? implode(',', $data) : $data,
-        );
-
-        if ($date) {
-            $request['date'] = $date;
-        }
-
-        $result = self::api_send_request($request, self::URL, false, 6);
-        $result = $do_check ? self::api_check_response($result, 'spam_check_cms') : $result;
-
-        return $result;
-    }
-
-    /**
-     * Function sends empty feedback for version comparison in Dashboard
-     *
-     * @param string api_key
-     * @param string agent-version
-     * @param bool perform check flag
-     * @return mixed (STRING || array('error' => true, 'error_string' => STRING))
-     */
-    public static function api_method_send_empty_feedback($api_key, $agent, $do_check = true)
-    {
-
-        $request = array(
-            'method_name' => 'send_feedback',
-            'auth_key' => $api_key,
-            'feedback' => 0 . ':' . $agent,
-        );
-
-        $result = self::api_send_request($request);
-        $result = $do_check ? self::api_check_response($result, 'send_feedback') : $result;
-
-        return $result;
-    }
-
-    /**
      * Function sends raw request to API server
      *
      * @param string url of API server
      * @param array data to send
      * @param boolean is data have to be JSON encoded or not
      * @param integer connect timeout
-     * @return type
+     * @return bool|mixed|string|null
      */
     public static function api_send_request($data, $url = self::URL, $isJSON = false, $timeout = 3, $ssl = false)
     {
@@ -477,7 +304,7 @@ class CleantalkHelper
                 )
             );
             $context = stream_context_create($opts);
-            $result = @file_get_contents($url, 0, $context);
+            $result = @file_get_contents($url, false, $context);
         }
 
         if (!$result && $curl_error) {
@@ -547,9 +374,9 @@ class CleantalkHelper
         }
     }
 
-    public static function is_json($string)
+    public static function isJson($string)
     {
-        return is_string($string) && is_array(json_decode($string, true)) ? true : false;
+        return ((is_string($string) && (is_object(json_decode($string)) || is_array(json_decode($string))))) ? true : false;
     }
 
     /*
@@ -564,7 +391,7 @@ class CleantalkHelper
             if (preg_match('/\AHTTP_/', $key)) {
                 $server_key = preg_replace('/\AHTTP_/', '', $key);
                 $key_parts = explode('_', $server_key);
-                if (count($key_parts) > 0 and strlen($server_key) > 2) {
+                if (strlen($server_key) > 2) {
                     foreach ($key_parts as $part_index => $part) {
                         $key_parts[$part_index] = mb_strtolower($part);
                         $key_parts[$part_index][0] = strtoupper($key_parts[$part_index][0]);
@@ -605,5 +432,156 @@ class CleantalkHelper
         }
 
         return $obj;
+    }
+
+    /**
+     * Resolve IP to hostname with FCrDNS (Forward-Confirmed reverse DNS) verification.
+     * Protects against PTR spoofing by verifying the hostname resolves back to the same IP.
+     *
+     * @param string $ip IP address to resolve
+     *
+     * @return string|false Verified hostname, original IP if unverifiable, or false on failure
+     */
+    public static function ipResolve($ip)
+    {
+        // Validate IP first
+        $ip_version = self::ipValidate($ip);
+        if (!$ip_version) {
+            return false;
+        }
+
+        // Reverse DNS lookup (PTR record)
+        $hostname = gethostbyaddr($ip);
+
+        // If gethostbyaddr returns the IP itself, it means no PTR record exists
+        if (!$hostname || $hostname === $ip) {
+            return $ip;
+        }
+
+        $ip_field = ($ip_version === 'v6') ? 'ipv6' : 'ip';
+        $records = [];
+
+        // Forward DNS lookup - use dns_get_record() to support both IPv4 (A) and IPv6 (AAAA) records
+        if ( function_exists('dns_get_record') ) {
+            $record_type = ($ip_version === 'v6') ? DNS_AAAA : DNS_A;
+            $dns_records = dns_get_record($hostname, $record_type);
+            if ( $dns_records !== false ) {
+                $records = $dns_records;
+            }
+        }
+
+        // Another try if first failed (only for v4)
+        if ( empty($records) && $ip_version === 'v4' && function_exists('gethostbynamel') ) {
+            $ips_v4 = gethostbynamel($hostname);
+            if ( $ips_v4 !== false ) {
+                foreach ( $ips_v4 as $_ip ) {
+                    $records[] = array(
+                        "ip" => $_ip,
+                        "host" => $hostname
+                    );
+                }
+            }
+        }
+
+        // If forward lookup fails, we can't verify
+        if ( empty($records) ) {
+            return false;
+        }
+
+        // Extract IPs from DNS records
+        $forward_ips = array();
+        foreach ($records as $record) {
+            if (isset($record[$ip_field])) {
+                $forward_ips[] = $record[$ip_field];
+            }
+        }
+
+        if (empty($forward_ips)) {
+            return false;
+        }
+
+        // Check if the original IP is in the list of IPs the hostname resolves to
+        if ($ip_version === 'v6') {
+            $normalized_ip = self::ipV6Normalize($ip);
+            foreach ($forward_ips as $forward_ip) {
+                if (self::ipV6Normalize($forward_ip) === $normalized_ip) {
+                    return $hostname;
+                }
+            }
+        } elseif (in_array($ip, $forward_ips, true)) {
+            return $hostname;
+        }
+
+        return false;
+    }
+
+    /**
+     * Validating IPv4, IPv6
+     *
+     * @param string $ip
+     *
+     * @return string|bool
+     */
+    public static function ipValidate($ip)
+    {
+        if ( !$ip ) {
+            return false;
+        } // NULL || FALSE || '' || so on...
+        if ( filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && $ip != '0.0.0.0' ) {
+            return 'v4';
+        }  // IPv4
+        if ( filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) && self::ipV6Reduce($ip) != '0::0' ) {
+            return 'v6';
+        }  // IPv6
+        return false; // Unknown
+    }
+
+    /**
+     * Expand IPv6
+     *
+     * @param string $ip
+     *
+     * @return string IPv6
+     */
+    public static function ipV6Normalize($ip)
+    {
+        $ip = trim($ip);
+        // Searching for ::ffff:xx.xx.xx.xx patterns and turn it to IPv6
+        if ( preg_match('/^::ffff:([0-9]{1,3}\.?){4}$/', $ip) ) {
+            $ip = dechex((int)sprintf("%u", ip2long(substr($ip, 7))));
+            $ip = '0:0:0:0:0:0:' . (strlen($ip) > 4 ? substr($ip, 0, -4) : '0') . ':' . substr($ip, -4, 4);
+            // Normalizing hextets number
+        } elseif ( strpos($ip, '::') !== false ) {
+            $ip = str_replace('::', str_repeat(':0', 8 - substr_count($ip, ':')) . ':', $ip);
+            $ip = strpos($ip, ':') === 0 ? '0' . $ip : $ip;
+            $ip = strpos(strrev($ip), ':') === 0 ? $ip . '0' : $ip;
+        }
+        // Simplifyng hextets
+        if ( preg_match('/:0(?=[a-z0-9]+)/', $ip) ) {
+            $ip = preg_replace('/:0(?=[a-z0-9]+)/', ':', strtolower($ip));
+            $ip = self::ipV6Normalize($ip);
+        }
+        return $ip;
+    }
+
+    /**
+     * Reduce IPv6
+     *
+     * @param string $ip
+     *
+     * @return string IPv6
+     */
+    public static function ipV6Reduce($ip)
+    {
+        if ( strpos($ip, ':') !== false ) {
+            $ip = preg_replace('/:0{1,4}/', ':', $ip);
+            if ( preg_match('/^[0-9a-fA-F]{1,4}(?=:)/', $ip, $matches) && isset($matches[0]) ) {
+                $first_hextet = ltrim($matches[0], '0');
+                $first_hextet = $first_hextet === '' ? '0' : $first_hextet;
+                $ip = $first_hextet . substr($ip, strlen($matches[0]));
+            }
+            $ip = preg_replace('/:{2,}/', '::', $ip);
+        }
+        return $ip;
     }
 }

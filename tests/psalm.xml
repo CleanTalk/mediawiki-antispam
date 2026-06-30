@@ -19,4 +19,7 @@
     <projectFiles>
         <directory name="../Antispam"/>
     </projectFiles>
+    <stubs>
+        <file name="stubs/MediaWikiStubs.php"/>
+    </stubs>
 </psalm>
