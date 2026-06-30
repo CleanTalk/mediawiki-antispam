@@ -5,7 +5,7 @@
  *
  * Mostly contains request's wrappers.
  *
- * @version 2.4
+ * @version 2.5
  * @package Cleantalk
  * @subpackage Helper
  * @author Cleantalk team (welcome@cleantalk.org)

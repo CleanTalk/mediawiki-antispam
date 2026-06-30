@@ -6,7 +6,7 @@ require_once('CleantalkResponse.php');
 /**
  * Cleantalk Base class
  *
- * @version 2.4
+ * @version 2.5
  * @package Cleantalk
  * @subpackage Base
  * @author Cleantalk team (welcome@cleantalk.org)

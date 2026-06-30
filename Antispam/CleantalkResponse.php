@@ -3,7 +3,7 @@
 /**
  * Cleantalk Response class
  *
- * @version 2.4
+ * @version 2.5
  * @package Cleantalk
  * @subpackage Response
  * @author Cleantalk team (welcome@cleantalk.org)
