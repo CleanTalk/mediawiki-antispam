@@ -38,9 +38,8 @@ $GLOBALS['wgCTServerURL'] = 'https://moderate.cleantalk.org/api2.0';
 
 /**
  * Extension agent name and version
- * @psalm-suppress UnusedVariable Used via global $wgCTAgent in Antispam.body.php
  */
-$wgCTAgent = 'mediawiki-2.5.0';
+$GLOBALS['wgCTAgent'] = 'mediawiki-2.5.0';
 
 /**
  * Extension name
