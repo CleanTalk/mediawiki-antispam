@@ -24,34 +24,7 @@ class CleantalkSFW extends CleantalkHelper
     private $db_result;
     private $db_result_data = array();
 
-	public function __construct()
-	{
-		$this->table_prefix = "";
-		$this->db = self::getPrimaryDatabase();
-	}
-
-	public function unversal_query($query, $straight_query = false)
-	{
-		if($straight_query){
-			$this->db_result = $this->db->query($query);
-		}
-		else
-			$this->query = $query;
-	}
-
-	public function unversal_fetch()
-	{
-		$this->db_result_data = $this->db_result->fetchRow();
-	}
-
-	public function unversal_fetch_all()
-	{
-		while ($row = $this->db_result->fetchRow()){
-			$this->db_result_data[] = $row;
-		}
-	}
-
-	public function get_db_result_data()
+    public function __construct()
     {
         $this->table_prefix = "";
         $this->db = CTBody::getDBHandler();

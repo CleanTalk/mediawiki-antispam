@@ -86,7 +86,7 @@ class CTBody
     }
     public static function createSFWTables()
     {
-        $dbr = CleantalkHelper::getPrimaryDatabase();
+        $dbr = self::getDBHandler();
 
         if ( ! $dbr->tableExists('cleantalk_sfw') ) {
             $dbr->query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
