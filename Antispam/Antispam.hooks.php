@@ -246,15 +246,16 @@ class CTHooks
         $text .= CTBody::AddJSCode();
         CTBody::ctSetCookie();
 
-        $dbr = CTBody::getDBHandler();
-
-        if ( ! $dbr->isReadOnly() ) {
-            CTBody::createSettingsTable();
-        }
+        $dbr = null;
 
         /* SFW starts */
 
-        if ($wgCTSFW && !$dbr->isReadOnly()) {
+        if ( $wgCTSFW ) {
+            $dbr = CleantalkHelper::getPrimaryDatabase();
+        }
+
+        if ( $wgCTSFW && $dbr && !$dbr->isReadOnly() )
+        {
             CTBody::createSFWTables();
 
             $sfw = new CleantalkSFW();
