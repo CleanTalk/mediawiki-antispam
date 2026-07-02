@@ -42,6 +42,7 @@ class CleantalkSFW extends CleantalkHelper
 
     public function unversal_fetch_all()
     {
+        $this->db_result_data = array();
         while ($row = $this->db_result->fetchRow()) {
             $this->db_result_data[] = $row;
         }

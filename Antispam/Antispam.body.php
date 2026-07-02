@@ -1,5 +1,6 @@
 <?php
 
+use MediaWiki\Language\RawMessage;
 use MediaWiki\MediaWikiServices;
 
 class CTBody
@@ -305,12 +306,28 @@ class CTBody
     {
         $dbw = self::getDBHandler();
 
-        if ( ! $dbw->tableExists('cleantalk_settings') ) {
-            return false;
+        if ( $dbw->tableExists('cleantalk_settings') ) {
+            $result = self::ctFetchSettingsFromTable($dbw, 'cleantalk_settings');
+            if ( $result !== false ) {
+                return $result;
+            }
         }
 
-        $get_settings_query = "SELECT * FROM cleantalk_settings";
-        $res = $dbw->query($get_settings_query);
+        if ( $dbw->tableExists('cleantalk_sfw_settings') ) {
+            return self::ctFetchSettingsFromTable($dbw, 'cleantalk_sfw_settings');
+        }
+
+        return false;
+    }
+
+    /**
+     * @param \Wikimedia\Rdbms\IDatabase $dbw
+     * @param string $table
+     * @return array|false
+     */
+    private static function ctFetchSettingsFromTable($dbw, $table)
+    {
+        $res = $dbw->query("SELECT * FROM `{$table}`");
 
         if ( $res ) {
             $result = [];
@@ -321,6 +338,17 @@ class CTBody
         }
 
         return false;
+    }
+
+    /**
+     * Status::newFatal() with plain text from CleanTalk API (not an i18n message key).
+     *
+     * @param string $message
+     * @return Status
+     */
+    public static function spamStatusFatal($message)
+    {
+        return Status::newFatal(new RawMessage('$1', [$message]));
     }
 
     /**
@@ -381,14 +409,17 @@ class CTBody
 
     public static function getDBHandler()
     {
-        global $wgVersion;
-        $version = defined('MW_VERSION') ? MW_VERSION : $wgVersion;
-        if (version_compare($version, '1.31', '>')) {
-            $dbProvider  = MediaWikiServices::getInstance()->getConnectionProvider();
-            $dbw = $dbProvider->getPrimaryDatabase();
-        } else {
-            $dbw = wfGetDB(DB_MASTER);
+        if ( function_exists( 'wfGetDB' ) ) {
+            if ( defined( 'DB_MASTER' ) ) {
+                return wfGetDB( DB_MASTER );
+            }
+            if ( defined( 'DB_PRIMARY' ) ) {
+                return wfGetDB( DB_PRIMARY );
+            }
         }
-        return $dbw;
+
+        return MediaWikiServices::getInstance()
+            ->getConnectionProvider()
+            ->getPrimaryDatabase();
     }
 }

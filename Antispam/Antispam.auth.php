@@ -36,13 +36,13 @@ class CTAuth extends AbstractPreAuthenticationProvider
         // Disallow account with CleanTalk comment
         if ($ctResult->allow == 0) {
             $allowAccount = false;
-            return Status::newFatal($ctResult->comment);
+            return CTBody::spamStatusFatal($ctResult->comment);
         }
 
         if ($ctResult->inactive === 1) {
             CTBody::SendAdminEmail($wgCTExtName, $ctResult->comment);
         }
 
-        return $allowAccount ? Status::newGood() : Status::newFatal($ctResult->comment);
+        return $allowAccount ? Status::newGood() : CTBody::spamStatusFatal($ctResult->comment);
     }
 }
