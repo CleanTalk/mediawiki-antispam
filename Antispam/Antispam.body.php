@@ -409,12 +409,12 @@ class CTBody
 
     public static function getDBHandler()
     {
-        if ( function_exists( 'wfGetDB' ) ) {
-            if ( defined( 'DB_MASTER' ) ) {
-                return wfGetDB( DB_MASTER );
+        if (function_exists('wfGetDB')) {
+            if (defined('DB_MASTER')) {
+                return wfGetDB(DB_MASTER);
             }
-            if ( defined( 'DB_PRIMARY' ) ) {
-                return wfGetDB( DB_PRIMARY );
+            if (defined('DB_PRIMARY')) {
+                return wfGetDB(DB_PRIMARY);
             }
         }
 
