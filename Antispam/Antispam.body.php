@@ -329,15 +329,19 @@ class CTBody
     {
         $res = $dbw->query("SELECT * FROM `{$table}`");
 
-        if ( $res ) {
-            $result = [];
-            while ($row = $res->fetchRow()) {
-                $result[$row[0]] = $row[1];
-            }
-            return $result;
+        if ( !is_object($res) ) {
+            return false;
         }
 
-        return false;
+        $result = [];
+        while ($row = $res->fetchRow()) {
+            if ( !isset($row[0], $row[1]) ) {
+                continue;
+            }
+            $result[$row[0]] = $row[1];
+        }
+
+        return $result;
     }
 
     /**
@@ -345,6 +349,7 @@ class CTBody
      *
      * @param string $message
      * @return Status
+     * @psalm-suppress PossiblyUnusedMethod Called from CTAuth::testForAccountCreation
      */
     public static function spamStatusFatal($message)
     {

@@ -17,6 +17,20 @@ namespace MediaWiki\Auth {
     }
 }
 
+namespace MediaWiki\Language {
+
+    class RawMessage
+    {
+        /**
+         * @param string $message
+         * @param list<mixed> $params
+         */
+        public function __construct($message, array $params = array())
+        {
+        }
+    }
+}
+
 namespace MediaWiki {
 
     class MediaWikiServices
@@ -90,8 +104,12 @@ namespace {
 
     class Status
     {
-        /** @return self */
-        public static function newFatal($message)
+        /**
+         * @param string|object $message
+         * @param mixed ...$parameters
+         * @return self
+         */
+        public static function newFatal($message, ...$parameters)
         {
         }
 
