@@ -7,7 +7,7 @@ require_once('Antispam.body.php');
  * Compatible only with Wordpress.
  * Version 2.0-wp
  * author Cleantalk team (welcome@cleantalk.org)
- * copyright (C) 2014 CleanTalk team (http://cleantalk.org)
+ * copyright (C) 2014 CleanTalk team (https://cleantalk.org)
  * license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
  * see https://github.com/CleanTalk/php-antispam
 */
