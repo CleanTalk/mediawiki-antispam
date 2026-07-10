@@ -1,8 +1,9 @@
 <?php
+
 /**
  * Cleantalk Response class
  *
- * @version 2.4
+ * @version 2.5
  * @package Cleantalk
  * @subpackage Response
  * @author Cleantalk team (welcome@cleantalk.org)
@@ -10,118 +11,117 @@
  * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
  * @see https://github.com/CleanTalk/php-antispam
  *
+ * @psalm-suppress PossiblyUnusedProperty
  */
-
 class CleantalkResponse
 {
-
     /**
-     * Received feedback nubmer
+     * Received feedback number
      * @var int
      */
-    public $received = null;
+    public $received;
 
     /**
      *  Is stop words
      * @var int
      */
-    public $stop_words = null;
+    public $stop_words;
 
     /**
      * Cleantalk comment
      * @var string
      */
-    public $comment = null;
+    public $comment;
 
     /**
      * Is blacklisted
      * @var int
      */
-    public $blacklisted = null;
+    public $blacklisted;
 
     /**
      * Is allow, 1|0
      * @var int
      */
-    public $allow = null;
+    public $allow;
 
     /**
      * Request ID
      * @var int
      */
-    public $id = null;
+    public $id;
 
     /**
      * Request errno
      * @var int
      */
-    public $errno = null;
+    public $errno;
 
     /**
      * Error string
      * @var string
      */
-    public $errstr = null;
+    public $errstr;
 
-	/**
+    /**
      * Error string
      * @var string
      */
-    public $curl_err = null;
+    public $curl_err;
 
     /**
      * Is fast submit, 1|0
      * @var string
      */
-    public $fast_submit = null;
+    public $fast_submit;
 
     /**
      * Is spam comment
      * @var string
      */
-    public $spam = null;
+    public $spam;
 
     /**
      * Is JS
-     * @var type
+     * @var string|null
      */
-    public $js_disabled = null;
+    public $js_disabled;
 
     /**
      * Sms check
-     * @var type
+     * @var string|null
      */
-    public $sms_allow = null;
+    public $sms_allow;
 
     /**
      * Sms code result
-     * @var type
+     * @var string|null
      */
-    public $sms = null;
+    public $sms;
 
     /**
      * Sms error code
-     * @var type
+     * @var string|null
      */
-    public $sms_error_code = null;
+    public $sms_error_code;
 
     /**
-     * Sms error code
-     * @var type
+     * Sms error text
+     * @var string|null
      */
-    public $sms_error_text = null;
+    public $sms_error_text;
 
-	/**
+    /**
      * Stop queue message, 1|0
      * @var int
      */
-    public $stop_queue = null;
+    public $stop_queue;
 
     /**
      * Account shuld by deactivated after registration, 1|0
      * @var int
      */
-    public $inactive = null;
+    public $inactive;
 
     /**
      * Account status
@@ -132,23 +132,26 @@ class CleantalkResponse
     /**
      * Create server response
      *
-     * @param type $response
-     * @param type $obj
+     * @param array|null $response
+     * @param object|null $obj
      */
-    function __construct($response = null, $obj = null) {
-        if ($response && is_array($response) && count($response) > 0) {
+    public function __construct($response = null, $obj = null)
+    {
+        if (is_array($response) && count($response) > 0) {
             foreach ($response as $param => $value) {
                 $this->{$param} = $value;
             }
-        } else {
+        } elseif (is_object($obj)) {
             $this->errno = $obj->errno;
             $this->errstr = $obj->errstr;
-			$this->curl_err = !empty($obj->curl_err) ? $obj->curl_err : false;
+            $this->curl_err = !empty($obj->curl_err) ? $obj->curl_err : false;
 
-			$this->errstr = preg_replace("/.+(\*\*\*.+\*\*\*).+/", "$1", $this->errstr);
+            if (!is_null($this->errstr)) {
+                $this->errstr = preg_replace("/.+(\*\*\*.+\*\*\*).+/", "$1", $this->errstr);
+            }
 
-            $this->stop_words = isset($obj->stop_words) ? utf8_decode($obj->stop_words) : null;
-            $this->comment = isset($obj->comment) ? utf8_decode($obj->comment) : null;
+            $this->stop_words = isset($obj->stop_words) ? CleantalkHelper::stringFromUTF8($obj->stop_words, 'ISO-8859-1') : null;
+            $this->comment = isset($obj->comment) ? CleantalkHelper::stringFromUTF8($obj->comment, 'ISO-8859-1') : null;
             $this->blacklisted = (isset($obj->blacklisted)) ? $obj->blacklisted : null;
             $this->allow = (isset($obj->allow)) ? $obj->allow : 0;
             $this->id = (isset($obj->id)) ? $obj->id : null;
@@ -162,10 +165,11 @@ class CleantalkResponse
             $this->stop_queue = (isset($obj->stop_queue)) ? $obj->stop_queue : 0;
             $this->inactive = (isset($obj->inactive)) ? $obj->inactive : 0;
             $this->account_status = (isset($obj->account_status)) ? $obj->account_status : -1;
-			$this->received = (isset($obj->received)) ? $obj->received : -1;
+            $this->received = (isset($obj->received)) ? $obj->received : -1;
 
-            if ($this->errno !== 0 && $this->errstr !== null && $this->comment === null)
+            if ($this->errno !== 0 && $this->errstr !== null && $this->comment === null) {
                 $this->comment = '*** ' . $this->errstr . ' Antispam service cleantalk.org ***';
+            }
         }
     }
 }

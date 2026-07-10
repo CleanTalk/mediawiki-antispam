@@ -1,6 +1,6 @@
 mediawiki-antispam
 ================
-Version 2.4
+Version 2.5
 ================
 
 If you find this project useful, please consider starring ⭐ it on GitHub — it helps us grow and support development!

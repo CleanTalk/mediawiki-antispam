@@ -1,0 +1,60 @@
+name: PHPUnit, PHPCS, Psalm
+
+on: # event list
+  push: # on push to each of these branches
+    branches:
+      - dev
+      - fix
+      - master
+  pull_request:
+    branches:
+      - dev
+      - master
+
+env: # environment variables (available in any part of the action)
+  PHP_VERSION: 7.4
+
+jobs:
+  build:
+    name: PHPUnit, PHPCS, Psalm
+    runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: localhost
+      DB_PORT: 3306
+      DB_DATABASE: wordpress_test
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+    steps:
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+
+      - name: Run MySQL server
+        run: sudo systemctl start mysql
+
+      - name: Code Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: composer i
+
+      - name: Running tests
+        env:
+          CLEANTALK_TEST_API_KEY: ${{ secrets.CLEANTALK_TEST_API_KEY }}
+        run: composer test
+
+      - name: Matrix notify on failure
+        if: failure()
+        uses: Glomberg/matrix-messenger-action@master
+        with:
+          server: ${{ secrets.MATRIX_SERVER }}
+          to: ${{ secrets.MATRIX_EXTERNSION_ROOM }}
+          token: ${{ secrets.MATRIX_USER_TOKEN }}
+          message: |
+            Hi, <strong>${{ github.actor }}</strong>! Your commit for <strong>${{ github.repository }}</strong> 
+            contains 💯 the best solution but it have to be fixed!
+            <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Auto-Tests (PHPUnit, PHPCS, Psalm)</a> build failed ⛔!
+

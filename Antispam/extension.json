@@ -1,6 +1,6 @@
 {
 	"name": "Antispam by CleanTalk",
-	"version": "2.4",
+	"version": "2.5",
 	"author": "CleanTalk Developers Team",
 	"url": "https://www.mediawiki.org/wiki/Extension:Antispam",
 	"description": "cleantalk.org is a cloud antispam service ",
@@ -46,10 +46,10 @@
 			"value": true
 		},
 		"CTServerURL": {
-			"value": "http://moderate.cleantalk.org/api2.0"
+			"value": "https://moderate.cleantalk.org/api2.0"
 		},
 		"CTAgent": {
-			"value": "mediawiki-24"
+			"value": "mediawiki-2.5.0"
 		},
 		"CTExtName": {
 			"value": "Antispam by CleanTalk"
