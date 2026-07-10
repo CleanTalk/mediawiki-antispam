@@ -365,11 +365,15 @@ class CTBody
     {
         $dbw = self::getDBHandler();
 
-        $name = addslashes($setting_name);
-        $value = addslashes($setting_value);
-
-        $set_settings_query = "INSERT INTO cleantalk_settings (setting_name, setting_value) VALUES ('$name', '$value') ON DUPLICATE KEY UPDATE setting_name = VALUE(setting_name), setting_value = VALUE(setting_value)";
-        $dbw->query($set_settings_query);
+        $dbw->replace(
+            'cleantalk_settings',
+            'setting_name',
+            [
+                'setting_name' => $setting_name,
+                'setting_value' => (string)$setting_value,
+            ],
+            __METHOD__
+        );
     }
 
     /**
